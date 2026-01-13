@@ -29,6 +29,13 @@
       "when": 1734364800000,
       "tag": "0004_add_payment_method",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1768308365908,
+      "tag": "0004_faithful_electro",
+      "breakpoints": true
     }
   ]
 }

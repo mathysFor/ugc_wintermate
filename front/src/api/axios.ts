@@ -1,11 +1,11 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { useAuthStore } from '@/stores/auth';
 
-// En production (Vercel), utiliser directement l'URL Railway (les rewrites Vercel ont des problèmes avec POST)
-// En dev local, utiliser le proxy /api-prod vers Railway
+// En production (Vercel), utiliser directement l'URL Railway
+// En dev local, utiliser le proxy /api-local vers localhost:3000
 export const BASE_URL = import.meta.env.PROD
   ? "https://ugc-production-9234.up.railway.app"
-  : "/api-prod";
+  : "/api-local";
 
 const axiosInstance = axios.create({ baseURL: BASE_URL });
 
