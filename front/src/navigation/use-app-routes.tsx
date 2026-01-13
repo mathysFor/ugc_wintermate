@@ -1,0 +1,94 @@
+import {
+  LandingPage,
+  LoginPage,
+  RegisterPage,
+  DashboardPage,
+  CreatorDashboardPage,
+  BrandDashboardPage,
+  CampaignsPage,
+  CampaignDetailPage,
+  CreateCampaignPage,
+  EditCampaignPage,
+  BrandCampaignsPage,
+  SubmissionsPage,
+  BrandSubmissionsPage,
+  BrandVideosPage,
+  InvoicesPage,
+  BrandInvoicesPage,
+  NotificationsPage,
+  ProfilePage,
+  TiktokCallbackPage,
+} from '@/pages';
+
+export enum AppRoutes {
+  // Public
+  landing = '/',
+  login = '/login',
+  register = '/register',
+  campaigns = '/campaigns',
+  campaignDetail = '/campaign/:id',
+
+  // Protected
+  dashboard = '/dashboard',
+  dashboardCreator = '/dashboard/creator',
+  dashboardBrand = '/dashboard/brand',
+  campaignCreate = '/campaign/create',
+  campaignEdit = '/campaign/:id/edit',
+  brandCampaigns = '/brand/campaigns',
+  submissions = '/submissions',
+  brandSubmissions = '/brand/submissions',
+  brandVideos = '/brand/videos',
+  invoices = '/invoices',
+  brandInvoices = '/brand/invoices',
+  notifications = '/notifications',
+  profile = '/profile',
+  tiktokCallback = '/tiktok/callback',
+}
+
+export enum ProtectedRoutes {
+  campaigns = AppRoutes.campaigns,
+  campaignDetail = AppRoutes.campaignDetail,
+  dashboard = AppRoutes.dashboard,
+  dashboardCreator = AppRoutes.dashboardCreator,
+  dashboardBrand = AppRoutes.dashboardBrand,
+  campaignCreate = AppRoutes.campaignCreate,
+  campaignEdit = AppRoutes.campaignEdit,
+  brandCampaigns = AppRoutes.brandCampaigns,
+  submissions = AppRoutes.submissions,
+  brandSubmissions = AppRoutes.brandSubmissions,
+  brandVideos = AppRoutes.brandVideos,
+  invoices = AppRoutes.invoices,
+  brandInvoices = AppRoutes.brandInvoices,
+  notifications = AppRoutes.notifications,
+  profile = AppRoutes.profile,
+  tiktokCallback = AppRoutes.tiktokCallback,
+}
+
+export const useAppRoutes = () => {
+  return {
+    config: [
+      // Public routes
+      { path: AppRoutes.landing, element: <LandingPage /> },
+      { path: AppRoutes.login, element: <LoginPage /> },
+      { path: AppRoutes.register, element: <RegisterPage /> },
+      { path: AppRoutes.campaigns, element: <CampaignsPage /> },
+      { path: AppRoutes.campaignDetail, element: <CampaignDetailPage /> },
+
+      // Protected routes
+      { path: AppRoutes.dashboard, element: <DashboardPage /> },
+      { path: AppRoutes.dashboardCreator, element: <CreatorDashboardPage /> },
+      { path: AppRoutes.dashboardBrand, element: <BrandDashboardPage /> },
+      { path: AppRoutes.campaignCreate, element: <CreateCampaignPage /> },
+      { path: AppRoutes.campaignEdit, element: <EditCampaignPage /> },
+      { path: AppRoutes.brandCampaigns, element: <BrandCampaignsPage /> },
+      { path: AppRoutes.submissions, element: <SubmissionsPage /> },
+      { path: AppRoutes.brandSubmissions, element: <BrandSubmissionsPage /> },
+      { path: AppRoutes.brandVideos, element: <BrandVideosPage /> },
+      { path: AppRoutes.invoices, element: <InvoicesPage /> },
+      { path: AppRoutes.brandInvoices, element: <BrandInvoicesPage /> },
+      { path: AppRoutes.notifications, element: <NotificationsPage /> },
+      { path: AppRoutes.profile, element: <ProfilePage /> },
+      { path: AppRoutes.tiktokCallback, element: <TiktokCallbackPage /> },
+    ],
+  };
+};

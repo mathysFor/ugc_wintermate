@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm install --include=dev"]
+
+[phases.build]
+cmds = [
+  "if [ -d ../shared ]; then cp -r ../shared ./shared; fi",
+  "npm run build"
+]
+
+[start]
+cmd = "node dist/index.js"
+

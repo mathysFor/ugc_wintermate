@@ -1,0 +1,26 @@
+{
+    "name": "ai-boosted-project",
+    "private": true,
+    "workspaces": [
+        "back",
+        "front"
+    ],
+"scripts": {
+      "dev": "concurrently -n BACK,FRONT -c green,cyan \"npm run dev -w back\" \"npm run dev -w front\"",
+      "dev:back": "npm run dev -w back",
+      "dev:front": "npm run dev -w front",
+      "build": "npm run build -w back && npm run build -w front",
+      "build:back": "rollup -c rollup.config.mjs",
+      "clean": "npm run clean -w back"
+    },
+    "devDependencies": {
+        "@rollup/plugin-alias": "^6.0.0",
+        "@rollup/plugin-commonjs": "^29.0.0",
+        "@rollup/plugin-json": "^6.1.0",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-typescript": "^12.3.0",
+        "concurrently": "^8.2.2",
+        "rollup": "^4.53.3",
+        "tslib": "^2.8.1"
+    }
+}
