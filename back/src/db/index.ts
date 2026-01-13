@@ -1,7 +1,3 @@
-// #region agent log
-fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db/index.ts:1',message:'DB module loading',data:{hasDatabaseUrl:!!process.env.DATABASE_URL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
-
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
@@ -60,9 +56,6 @@ if (process.env.DATABASE_URL) {
     });
 
   db = drizzle(pool, { schema });
-  // #region agent log
-  fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db/index.ts:db-init-success',message:'DB initialized with DATABASE_URL',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 } else {
   // Créer un pool avec une URL invalide pour éviter les erreurs d'import
   // Les routes qui utilisent db échoueront avec une erreur claire
@@ -72,13 +65,6 @@ if (process.env.DATABASE_URL) {
   db = drizzle(pool, { schema });
   console.warn('[DB] ⚠️  Base de données non initialisée - DATABASE_URL manquant');
   console.warn('[DB] ⚠️  Les requêtes DB échoueront jusqu\'à ce que DATABASE_URL soit configuré');
-  // #region agent log
-  fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db/index.ts:db-init-fallback',message:'DB initialized with fallback (no DATABASE_URL)',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 }
-
-// #region agent log
-fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db/index.ts:export',message:'DB module ready to export',data:{dbType:typeof db},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
 
 export { db };
