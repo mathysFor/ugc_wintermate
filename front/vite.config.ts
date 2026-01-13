@@ -20,7 +20,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api-local/, "")
       },
       "/api-prod": {
-        target: "https://ugc-production-9234.up.railway.app",
+        target: "https://back-production-b3c5.up.railway.app",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-prod/, "")
       },
