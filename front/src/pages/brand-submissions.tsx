@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetBrandSubmissions, useValidateSubmission, useRefuseSubmission } from '@/api/submissions';
+import { useGetBrandSubmissions, useValidateSubmission, useRefuseSubmission, useDeleteSubmission } from '@/api/submissions';
 import { queryClient } from '@/api/query-config';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import {
   Check,
   X,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from 'lucide-react';
 
 // Composant pour les actions de validation/refus
@@ -106,14 +107,50 @@ const SubmissionActions = ({ submission, onActionComplete }: {
   );
 };
 
+// Composant pour les actions de suppression (pour les soumissions acceptées)
+const DeleteSubmissionAction = ({ submission, onActionComplete }: { 
+  submission: SubmissionWithRelations; 
+  onActionComplete: () => void;
+}) => {
+  const { mutateAsync: deleteSubmission, isPending: isDeleting } = useDeleteSubmission(submission.id, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brand-submissions'] });
+      if (onActionComplete) {
+        onActionComplete();
+      }
+    },
+  });
+
+  const handleDelete = async () => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette soumission ? Cette action est irréversible.')) {
+      await deleteSubmission(undefined);
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="destructive"
+      onClick={handleDelete}
+      disabled={isDeleting}
+      className="min-w-[120px] bg-red-600 hover:bg-red-700 text-white border-0"
+    >
+      <Trash2 size={16} className="mr-1" />
+      {isDeleting ? 'Suppression...' : 'Supprimer'}
+    </Button>
+  );
+};
+
 // Composant carte de soumission pour la marque
 const BrandSubmissionCard = ({ 
   submission, 
   showActions = false,
+  showDeleteAction = false,
   onActionComplete 
 }: { 
   submission: SubmissionWithRelations;
   showActions?: boolean;
+  showDeleteAction?: boolean;
   onActionComplete?: () => void;
 }) => {
   const tiktokVideoUrl = `https://www.tiktok.com/@${submission.tiktokAccount.username}/video/${submission.tiktokVideoId}`;
@@ -208,6 +245,16 @@ const BrandSubmissionCard = ({
       {showActions && onActionComplete && (
         <SubmissionActions submission={submission} onActionComplete={onActionComplete} />
       )}
+      
+      {/* Action de suppression (pour les soumissions acceptées) */}
+      {showDeleteAction && (
+        <div className="flex justify-end pt-2 border-t border-slate-200 mt-2">
+          <DeleteSubmissionAction 
+            submission={submission} 
+            onActionComplete={onActionComplete || (() => {})} 
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -259,6 +306,7 @@ const TabContent = ({
           key={submission.id} 
           submission={submission}
           showActions={showActions}
+          showDeleteAction={status === 'accepted'}
           onActionComplete={() => refetch()}
         />
       ))}
