@@ -1,9 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ComposedChart,
-  Bar,
-  Line,
   Area,
   AreaChart,
   XAxis,
