@@ -7,6 +7,7 @@ import { useGetBrandInvoices } from '@/api/invoices';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { BricksCreatorsLogo } from '@/components/bricks-creators-logo';
+import { AppRoutes } from '@/navigation/use-app-routes';
 import {
   LayoutDashboard,
   Briefcase,
@@ -208,6 +209,22 @@ export const MainLayout = ({ children }: { children?: ReactNode }) => {
 
           {/* User & Logout */}
           <div className="p-4 border-t border-slate-100">
+            {/* Liens Privacy et Terms */}
+            <div className="mb-4 px-2 flex flex-col gap-1 text-[10px]">
+              <Link 
+                to={AppRoutes.privacyPolicy} 
+                className="text-slate-500 hover:text-slate-900 transition-colors"
+              >
+                Politique de confidentialité
+              </Link>
+              <Link 
+                to={AppRoutes.termsOfService} 
+                className="text-slate-500 hover:text-slate-900 transition-colors"
+              >
+                Conditions d'utilisation
+              </Link>
+            </div>
+            
             <div className="flex items-center gap-3 mb-4 px-2">
               <Avatar src={null} fallback={user?.firstName?.[0]} size="sm" />
               <div className="flex-1 min-w-0">
