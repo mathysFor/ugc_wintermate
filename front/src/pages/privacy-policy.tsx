@@ -1,235 +1,173 @@
 import { Link } from 'react-router-dom';
+import { WinterMateLogo } from '@/components/wintermate-logo';
+import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { BricksCreatorsLogo } from '@/components/bricks-creators-logo';
 
 export const PrivacyPolicyPage = () => {
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans">
+    <div className="min-h-screen font-sans" style={{ backgroundColor: '#2B2B2B' }}>
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-slate-600 hover:text-[#0A2337] transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Retour</span>
+      <nav className="fixed top-0 w-full z-50 transition-all duration-300">
+        <div className="absolute inset-0 backdrop-blur-xl border-b border-zinc-700/50" style={{ backgroundColor: 'rgba(43, 43, 43, 0.85)' }} />
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <WinterMateLogo className="h-12 md:h-14 w-auto" />
           </Link>
-          <BricksCreatorsLogo className="h-6 w-auto text-[#0A2337]" />
+          <Link to="/">
+            <Button variant="ghost" className="text-zinc-400 hover:text-white">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour
+            </Button>
+          </Link>
         </div>
       </nav>
 
-      <main className="pt-24 pb-16 px-4 md:px-6">
-        <article className="max-w-4xl mx-auto prose prose-slate prose-headings:text-[#0A2337] prose-a:text-[#FA6C37] prose-a:no-underline hover:prose-a:underline">
-          <h1 className="text-3xl md:text-4xl font-bold mb-8">Politique de Confidentialité</h1>
-          
-          <p className="text-slate-500 text-sm mb-8">Dernière mise à jour : 19 décembre 2025</p>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">1. Introduction</h2>
-            <p>
-              La présente Politique de Confidentialité décrit la manière dont Bricks.co (ci-après « nous », 
-              « notre » ou « Bricks ») collecte, utilise et protège vos données personnelles lorsque vous 
-              utilisez la plateforme Bricks Creators (ci-après « la Plateforme »).
+      <main className="relative pt-32 pb-16">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="prose prose-invert max-w-none">
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+              Politique de Confidentialité
+            </h1>
+            <p className="text-zinc-400 text-sm mb-8">
+              Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            <p>
-              Nous nous engageons à respecter votre vie privée et à protéger vos données personnelles 
-              conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi 
-              Informatique et Libertés.
-            </p>
-          </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">2. Responsable du traitement</h2>
-            <p>
-              Le responsable du traitement des données personnelles est :
-            </p>
-            <p className="bg-slate-50 p-4 rounded-lg">
-              <strong>Bricks.co</strong><br />
-              Société par actions simplifiée<br />
-              Email : <a href="mailto:privacy@bricks.co">privacy@bricks.co</a>
-            </p>
-          </section>
+            <div className="space-y-8 text-zinc-300">
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
+                <p className="leading-relaxed">
+                  WinterMate s'engage à protéger votre vie privée. Cette Politique de Confidentialité explique comment nous 
+                  collectons, utilisons, partageons et protégeons vos informations personnelles lorsque vous utilisez notre 
+                  plateforme.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">3. Données collectées</h2>
-            <p>Nous collectons les catégories de données suivantes :</p>
-            
-            <h3 className="text-lg font-medium mt-4 mb-2">Données d'identification</h3>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Nom et prénom</li>
-              <li>Adresse email</li>
-              <li>Identifiants de connexion</li>
-              <li>Photo de profil (optionnel)</li>
-            </ul>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">2. Informations que nous collectons</h2>
+                <p className="leading-relaxed mb-4">
+                  Nous collectons les types d'informations suivants :
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li><strong>Informations de compte :</strong> nom, adresse e-mail, mot de passe (crypté)</li>
+                  <li><strong>Informations de profil :</strong> photo de profil, biographie, informations de contact</li>
+                  <li><strong>Informations TikTok :</strong> données de votre compte TikTok connecté (nom d'utilisateur, statistiques, contenu)</li>
+                  <li><strong>Informations de paiement :</strong> coordonnées bancaires pour les paiements (traitées par des prestataires tiers sécurisés)</li>
+                  <li><strong>Données d'utilisation :</strong> logs, cookies, identifiants de dispositif</li>
+                </ul>
+              </section>
 
-            <h3 className="text-lg font-medium mt-4 mb-2">Données de compte TikTok</h3>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Identifiant TikTok</li>
-              <li>Nom d'utilisateur TikTok</li>
-              <li>Statistiques publiques du compte</li>
-            </ul>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">3. Comment nous utilisons vos informations</h2>
+                <p className="leading-relaxed mb-4">
+                  Nous utilisons vos informations pour :
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>Fournir, maintenir et améliorer nos services</li>
+                  <li>Traiter vos transactions et gérer vos paiements</li>
+                  <li>Vous connecter avec des marques et des campagnes appropriées</li>
+                  <li>Communiquer avec vous concernant votre compte et nos services</li>
+                  <li>Analyser l'utilisation de la plateforme et améliorer l'expérience utilisateur</li>
+                  <li>Détecter et prévenir la fraude et les abus</li>
+                  <li>Respecter nos obligations légales</li>
+                </ul>
+              </section>
 
-            <h3 className="text-lg font-medium mt-4 mb-2">Données de paiement</h3>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Coordonnées bancaires (IBAN)</li>
-              <li>Historique des paiements</li>
-              <li>Factures générées</li>
-            </ul>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">4. Partage d'informations</h2>
+                <p className="leading-relaxed mb-4">
+                  Nous pouvons partager vos informations dans les cas suivants :
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li><strong>Avec les marques partenaires :</strong> informations de profil nécessaires pour les campagnes (nom, statistiques TikTok, contenu créé)</li>
+                  <li><strong>Avec les prestataires de services :</strong> services de paiement, hébergement, analyse (sous contrat de confidentialité)</li>
+                  <li><strong>Conformité légale :</strong> si requis par la loi ou pour protéger nos droits</li>
+                  <li><strong>Avec votre consentement :</strong> dans tout autre cas avec votre autorisation explicite</li>
+                </ul>
+              </section>
 
-            <h3 className="text-lg font-medium mt-4 mb-2">Données d'utilisation</h3>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Vidéos et contenus soumis</li>
-              <li>Participation aux campagnes</li>
-              <li>Historique de navigation sur la Plateforme</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">5. Cookies et technologies similaires</h2>
+                <p className="leading-relaxed">
+                  Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience, analyser l'utilisation 
+                  de notre site et personnaliser le contenu. Vous pouvez gérer vos préférences de cookies dans les paramètres de 
+                  votre navigateur.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">4. Finalités du traitement</h2>
-            <p>Vos données personnelles sont collectées pour les finalités suivantes :</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Gestion de votre compte</strong> : création, authentification et gestion de votre espace personnel</li>
-              <li><strong>Fourniture des services</strong> : participation aux campagnes, soumission de contenus, suivi des performances</li>
-              <li><strong>Paiements</strong> : traitement des rémunérations et génération des factures</li>
-              <li><strong>Communication</strong> : envoi de notifications relatives à votre activité et aux campagnes</li>
-              <li><strong>Amélioration des services</strong> : analyse anonymisée pour améliorer la Plateforme</li>
-              <li><strong>Obligations légales</strong> : respect de nos obligations comptables et fiscales</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">6. Sécurité des données</h2>
+                <p className="leading-relaxed">
+                  Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées pour protéger vos 
+                  informations personnelles contre l'accès non autorisé, la perte, la destruction ou la modification. Cependant, 
+                  aucune méthode de transmission sur Internet n'est 100% sécurisée.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">5. Base légale du traitement</h2>
-            <p>Le traitement de vos données repose sur les bases légales suivantes :</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Exécution du contrat</strong> : traitement nécessaire à l'exécution des services</li>
-              <li><strong>Consentement</strong> : pour certaines communications marketing</li>
-              <li><strong>Intérêt légitime</strong> : amélioration de nos services, prévention de la fraude</li>
-              <li><strong>Obligation légale</strong> : conservation des données comptables</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">7. Vos droits</h2>
+                <p className="leading-relaxed mb-4">
+                  Conformément au RGPD et aux lois applicables, vous avez le droit de :
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>Accéder à vos informations personnelles</li>
+                  <li>Corriger des informations inexactes</li>
+                  <li>Demander la suppression de vos données</li>
+                  <li>Vous opposer au traitement de vos données</li>
+                  <li>Demander la portabilité de vos données</li>
+                  <li>Retirer votre consentement à tout moment</li>
+                </ul>
+                <p className="leading-relaxed mt-4">
+                  Pour exercer ces droits, contactez-nous via les moyens disponibles sur la plateforme.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">6. Durée de conservation</h2>
-            <p>Vos données sont conservées pendant les durées suivantes :</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Données de compte</strong> : pendant la durée de votre inscription + 3 ans après suppression</li>
-              <li><strong>Données de paiement</strong> : 10 ans (obligations comptables)</li>
-              <li><strong>Contenus soumis</strong> : pendant la durée de la campagne + 5 ans</li>
-              <li><strong>Données de navigation</strong> : 13 mois maximum</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">8. Conservation des données</h2>
+                <p className="leading-relaxed">
+                  Nous conservons vos informations personnelles aussi longtemps que nécessaire pour fournir nos services et 
+                  respecter nos obligations légales. Lorsque vous supprimez votre compte, nous supprimerons ou anonymiserons 
+                  vos données dans un délai raisonnable, sauf si la conservation est requise par la loi.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">7. Partage des données</h2>
-            <p>Vos données peuvent être partagées avec :</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Nos sous-traitants techniques</strong> : hébergement, paiement, envoi d'emails</li>
-              <li><strong>Les marques partenaires</strong> : dans le cadre des campagnes auxquelles vous participez</li>
-              <li><strong>Les autorités</strong> : sur demande légale</li>
-            </ul>
-            <p className="mt-4">
-              Nous ne vendons jamais vos données personnelles à des tiers.
-            </p>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">9. Transferts internationaux</h2>
+                <p className="leading-relaxed">
+                  Vos informations peuvent être transférées et stockées dans des pays en dehors de votre pays de résidence. 
+                  Nous nous assurons que des garanties appropriées sont en place pour protéger vos données conformément à 
+                  cette politique.
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">8. Transferts hors UE</h2>
-            <p>
-              Certaines données peuvent être transférées vers des pays hors de l'Union Européenne 
-              (notamment vers les États-Unis pour certains de nos prestataires). Ces transferts sont 
-              encadrés par des garanties appropriées (clauses contractuelles types, certifications).
-            </p>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">10. Modifications de cette politique</h2>
+                <p className="leading-relaxed">
+                  Nous pouvons modifier cette Politique de Confidentialité de temps à autre. Nous vous informerons de tout 
+                  changement significatif en publiant la nouvelle politique sur cette page et en mettant à jour la date 
+                  de "Dernière mise à jour".
+                </p>
+              </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">9. Sécurité des données</h2>
-            <p>
-              Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour 
-              protéger vos données contre la perte, l'accès non autorisé, la divulgation ou la 
-              destruction :
-            </p>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>Chiffrement des données sensibles</li>
-              <li>Authentification sécurisée</li>
-              <li>Accès restreint aux données</li>
-              <li>Surveillance et audits réguliers</li>
-            </ul>
-          </section>
+              <section>
+                <h2 className="text-2xl font-bold text-white mb-4">11. Contact</h2>
+                <p className="leading-relaxed">
+                  Pour toute question concernant cette Politique de Confidentialité ou pour exercer vos droits, vous pouvez 
+                  nous contacter via les moyens de contact disponibles sur notre plateforme.
+                </p>
+              </section>
+            </div>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">10. Vos droits</h2>
-            <p>Conformément au RGPD, vous disposez des droits suivants :</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Droit d'accès</strong> : obtenir une copie de vos données personnelles</li>
-              <li><strong>Droit de rectification</strong> : corriger vos données inexactes</li>
-              <li><strong>Droit à l'effacement</strong> : demander la suppression de vos données</li>
-              <li><strong>Droit à la limitation</strong> : limiter le traitement de vos données</li>
-              <li><strong>Droit à la portabilité</strong> : recevoir vos données dans un format structuré</li>
-              <li><strong>Droit d'opposition</strong> : vous opposer au traitement de vos données</li>
-              <li><strong>Droit de retirer votre consentement</strong> : à tout moment</li>
-            </ul>
-            <p className="mt-4">
-              Pour exercer ces droits, contactez-nous à : <a href="mailto:privacy@bricks.co">privacy@bricks.co</a>
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">11. Cookies</h2>
-            <p>
-              La Plateforme utilise des cookies pour son fonctionnement et l'amélioration de 
-              l'expérience utilisateur :
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Cookies essentiels</strong> : nécessaires au fonctionnement (authentification, sécurité)</li>
-              <li><strong>Cookies analytiques</strong> : mesure d'audience anonymisée</li>
-            </ul>
-            <p className="mt-4">
-              Vous pouvez gérer vos préférences de cookies dans les paramètres de votre navigateur.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">12. Réclamation</h2>
-            <p>
-              Si vous estimez que le traitement de vos données personnelles constitue une violation 
-              de vos droits, vous pouvez introduire une réclamation auprès de la CNIL 
-              (Commission Nationale de l'Informatique et des Libertés) :
-            </p>
-            <p className="bg-slate-50 p-4 rounded-lg">
-              <strong>CNIL</strong><br />
-              3 Place de Fontenoy, TSA 80715<br />
-              75334 Paris Cedex 07<br />
-              Site web : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">www.cnil.fr</a>
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">13. Modifications</h2>
-            <p>
-              Nous pouvons modifier cette Politique de Confidentialité à tout moment. En cas de 
-              modification substantielle, nous vous en informerons par email ou par notification 
-              sur la Plateforme.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">14. Contact</h2>
-            <p>
-              Pour toute question concernant cette Politique de Confidentialité ou vos données 
-              personnelles, contactez notre Délégué à la Protection des Données :
-            </p>
-            <p>
-              Email : <a href="mailto:privacy@bricks.co">privacy@bricks.co</a>
-            </p>
-          </section>
-        </article>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-100 py-8 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-slate-400">© 2025 Bricks.co - Tous droits réservés</p>
+            <div className="mt-12 pt-8 border-t border-zinc-700">
+              <Link to="/">
+                <Button className="rounded-full px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour à l'accueil
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </footer>
+      </main>
     </div>
   );
 };
-

@@ -34,3 +34,7 @@ export { ProfilePage } from './profile';
 
 // TikTok OAuth
 export { TiktokCallbackPage } from './tiktok-callback';
+
+// Legal
+export { TermsOfServicePage } from './terms-of-service';
+export { PrivacyPolicyPage } from './privacy-policy';

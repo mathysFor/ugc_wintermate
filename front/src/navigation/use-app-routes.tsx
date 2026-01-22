@@ -18,6 +18,8 @@ import {
   NotificationsPage,
   ProfilePage,
   TiktokCallbackPage,
+  TermsOfServicePage,
+  PrivacyPolicyPage,
 } from '@/pages';
 
 export enum AppRoutes {
@@ -27,6 +29,8 @@ export enum AppRoutes {
   register = '/register',
   campaigns = '/campaigns',
   campaignDetail = '/campaign/:id',
+  termsOfService = '/terms-of-service',
+  privacyPolicy = '/privacy-policy',
 
   // Protected
   dashboard = '/dashboard',
@@ -73,6 +77,8 @@ export const useAppRoutes = () => {
       { path: AppRoutes.register, element: <RegisterPage /> },
       { path: AppRoutes.campaigns, element: <CampaignsPage /> },
       { path: AppRoutes.campaignDetail, element: <CampaignDetailPage /> },
+      { path: AppRoutes.termsOfService, element: <TermsOfServicePage /> },
+      { path: AppRoutes.privacyPolicy, element: <PrivacyPolicyPage /> },
 
       // Protected routes
       { path: AppRoutes.dashboard, element: <DashboardPage /> },

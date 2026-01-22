@@ -324,7 +324,8 @@ export const LandingPage = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-zinc-500">
             <a href="#" className="hover:text-white transition-colors">À propos</a>
             <a href="#" className="hover:text-white transition-colors">Contact</a>
-            <Link to="/privacy-policy" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link to="/terms-of-service" className="hover:text-white transition-colors">Conditions d'utilisation</Link>
+            <Link to="/privacy-policy" className="hover:text-white transition-colors">Politique de confidentialité</Link>
           </div>
           <p className="text-sm text-zinc-600">© 2025 WinterMate</p>
         </div>
