@@ -48,6 +48,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       referralCode: user[0].referralCode ?? null,
       referralPercentage: user[0].referralPercentage ?? 10,
       referredById: user[0].referredById ?? null,
+      new_20: user[0].new_20,
       createdAt: user[0].createdAt.toISOString(),
     };
 

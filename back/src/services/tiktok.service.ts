@@ -143,14 +143,29 @@ async function generateCodeChallenge(codeVerifier: string): Promise<string> {
 
 /**
  * Récupère les variables d'environnement TikTok
+ * @param useApp1 Si true, utilise TIKTOK_APP_1_* credentials, sinon utilise TIKTOK_* credentials
  */
-function getConfig() {
-  const clientKey = process.env.TIKTOK_CLIENT_KEY;
-  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-  const redirectUri = process.env.TIKTOK_REDIRECT_URI;
+function getConfig(useApp1?: boolean) {
+  let clientKey: string | undefined;
+  let clientSecret: string | undefined;
+  let redirectUri: string | undefined;
 
-  if (!clientKey || !clientSecret || !redirectUri) {
-    throw new Error('Configuration TikTok manquante. Vérifiez TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET et TIKTOK_REDIRECT_URI');
+  if (useApp1 === true) {
+    clientKey = process.env.TIKTOK_APP_1_CLIENT_KEY;
+    clientSecret = process.env.TIKTOK_APP_1_CLIENT_SECRET;
+    redirectUri = process.env.TIKTOK_APP_1_REDIRECT_URI;
+
+    if (!clientKey || !clientSecret || !redirectUri) {
+      throw new Error('Configuration TikTok APP_1 manquante. Vérifiez TIKTOK_APP_1_CLIENT_KEY, TIKTOK_APP_1_CLIENT_SECRET et TIKTOK_APP_1_REDIRECT_URI');
+    }
+  } else {
+    clientKey = process.env.TIKTOK_CLIENT_KEY;
+    clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+    redirectUri = process.env.TIKTOK_REDIRECT_URI;
+
+    if (!clientKey || !clientSecret || !redirectUri) {
+      throw new Error('Configuration TikTok manquante. Vérifiez TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET et TIKTOK_REDIRECT_URI');
+    }
   }
 
   return { clientKey, clientSecret, redirectUri };
@@ -163,10 +178,11 @@ function getConfig() {
 export const tiktokService = {
   /**
    * Génère l'URL d'autorisation OAuth TikTok avec PKCE
+   * @param useApp1 Si true, utilise TIKTOK_APP_1_* credentials
    * @returns URL d'autorisation, state CSRF et code_verifier PKCE
    */
-  async generateAuthUrl(): Promise<{ authUrl: string; state: string; codeVerifier: string }> {
-    const { clientKey, redirectUri } = getConfig();
+  async generateAuthUrl(useApp1?: boolean): Promise<{ authUrl: string; state: string; codeVerifier: string }> {
+    const { clientKey, redirectUri } = getConfig(useApp1);
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -190,15 +206,16 @@ export const tiktokService = {
    * Échange le code d'autorisation contre des tokens
    * @param code Code reçu de TikTok après autorisation
    * @param codeVerifier Code verifier PKCE généré lors de l'auth
+   * @param useApp1 Si true, utilise TIKTOK_APP_1_* credentials
    * @returns Tokens d'accès et de rafraîchissement
    */
-  async exchangeCodeForTokens(code: string, codeVerifier: string): Promise<{
+  async exchangeCodeForTokens(code: string, codeVerifier: string, useApp1?: boolean): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
     openId: string;
   }> {
-    const { clientKey, clientSecret, redirectUri } = getConfig();
+    const { clientKey, clientSecret, redirectUri } = getConfig(useApp1);
 
     const response = await fetch(TIKTOK_TOKEN_URL, {
       method: 'POST',
@@ -237,14 +254,15 @@ export const tiktokService = {
   /**
    * Renouvelle un token d'accès expiré
    * @param refreshToken Token de rafraîchissement
+   * @param useApp1 Si true, utilise TIKTOK_APP_1_* credentials
    * @returns Nouveaux tokens
    */
-  async refreshAccessToken(refreshToken: string): Promise<{
+  async refreshAccessToken(refreshToken: string, useApp1?: boolean): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
   }> {
-    const { clientKey, clientSecret } = getConfig();
+    const { clientKey, clientSecret } = getConfig(useApp1);
 
     const response = await fetch(TIKTOK_TOKEN_URL, {
       method: 'POST',

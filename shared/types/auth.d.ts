@@ -9,6 +9,7 @@ export type AuthUser = {
   referralCode: string | null;
   referralPercentage: number;
   referredById: number | null;
+  new_20: boolean;
   createdAt: string;
 };
 

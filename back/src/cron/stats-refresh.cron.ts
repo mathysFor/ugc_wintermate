@@ -8,6 +8,7 @@ import {
   tiktokAccounts,
   campaignRewards,
   campaigns,
+  users,
 } from '../db/schema';
 import { notificationService } from '../services/notifications.service';
 import { tiktokService } from '../services/tiktok.service';
@@ -23,6 +24,7 @@ import { tiktokService } from '../services/tiktok.service';
  */
 async function ensureValidToken(account: {
   id: number;
+  userId: number;
   accessToken: string;
   refreshToken: string;
   expiresAt: Date;
@@ -35,7 +37,15 @@ async function ensureValidToken(account: {
   console.log(`[CRON] Token expiré pour le compte ${account.id}, tentative de refresh...`);
 
   try {
-    const newTokens = await tiktokService.refreshAccessToken(account.refreshToken);
+    // Récupérer l'utilisateur pour vérifier new_20
+    const [user] = await db.select().from(users).where(eq(users.id, account.userId)).limit(1);
+
+    if (!user) {
+      console.error(`[CRON] Utilisateur non trouvé pour le compte TikTok ${account.id}`);
+      return null;
+    }
+
+    const newTokens = await tiktokService.refreshAccessToken(account.refreshToken, user.new_20);
 
     // Mettre à jour les tokens en base
     await db

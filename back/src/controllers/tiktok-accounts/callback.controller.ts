@@ -49,7 +49,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
     }
 
     // 1. Échanger le code contre des tokens (avec PKCE)
-    const tokens = await tiktokService.exchangeCodeForTokens(code, codeVerifier);
+    const tokens = await tiktokService.exchangeCodeForTokens(code, codeVerifier, user[0].new_20);
 
     // 2. Récupérer les informations utilisateur TikTok
     // L'openId est récupéré depuis le token car non dispo via user/info sans user.info.basic

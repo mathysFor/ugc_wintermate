@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { eq } from 'drizzle-orm';
 import { db } from '../../db/index';
-import { campaignSubmissions, campaigns, brands, tiktokAccounts, campaignRewards, videoStatsCurrent } from '../../db/schema';
+import { campaignSubmissions, campaigns, brands, tiktokAccounts, campaignRewards, videoStatsCurrent, users } from '../../db/schema';
 import type { BrandSector } from '@shared/types/brands';
 import type { SubmissionResponse } from '@shared/types/submissions';
 import type { AuthUser } from '@shared/types/auth';
@@ -84,43 +84,50 @@ export const validateSubmission = async (req: Request, res: Response): Promise<v
     // Récupérer immédiatement les stats de la vidéo TikTok
     if (tiktokAccount[0] && tiktokAccount[0].isValid) {
       try {
-        // S'assurer que le token est valide
-        let accessToken = tiktokAccount[0].accessToken;
-        
-        if (tiktokService.isTokenExpired(tiktokAccount[0].expiresAt)) {
-          const newTokens = await tiktokService.refreshAccessToken(tiktokAccount[0].refreshToken);
-          await db
-            .update(tiktokAccounts)
-            .set({
-              accessToken: newTokens.accessToken,
-              refreshToken: newTokens.refreshToken,
-              expiresAt: new Date(Date.now() + newTokens.expiresIn * 1000),
-            })
-            .where(eq(tiktokAccounts.id, tiktokAccount[0].id));
-          accessToken = newTokens.accessToken;
-        }
+        // Récupérer l'utilisateur pour vérifier new_20
+        const [user] = await db.select().from(users).where(eq(users.id, tiktokAccount[0].userId)).limit(1);
 
-        // Récupérer les stats depuis l'API TikTok
-        const videoStats = await tiktokService.getVideoStats(accessToken, [updated.tiktokVideoId]);
-        
-        if (videoStats.length > 0) {
-          const stats = videoStats[0];
-          
-          // Mettre à jour les stats dans la base
-          await db
-            .update(videoStatsCurrent)
-            .set({
-              views: stats.views,
-              likes: stats.likes,
-              comments: stats.comments,
-              shares: stats.shares,
-              updatedAt: new Date(),
-            })
-            .where(eq(videoStatsCurrent.submissionId, updated.id));
-          
-          console.log(`[ValidateSubmission] Stats mises à jour pour la soumission ${updated.id}: ${stats.views} vues`);
+        if (!user) {
+          console.error(`[ValidateSubmission] Utilisateur non trouvé pour le compte TikTok ${tiktokAccount[0].id}`);
         } else {
-          console.log(`[ValidateSubmission] Aucune stat trouvée pour la vidéo ${updated.tiktokVideoId}`);
+          // S'assurer que le token est valide
+          let accessToken = tiktokAccount[0].accessToken;
+          
+          if (tiktokService.isTokenExpired(tiktokAccount[0].expiresAt)) {
+            const newTokens = await tiktokService.refreshAccessToken(tiktokAccount[0].refreshToken, user.new_20);
+            await db
+              .update(tiktokAccounts)
+              .set({
+                accessToken: newTokens.accessToken,
+                refreshToken: newTokens.refreshToken,
+                expiresAt: new Date(Date.now() + newTokens.expiresIn * 1000),
+              })
+              .where(eq(tiktokAccounts.id, tiktokAccount[0].id));
+            accessToken = newTokens.accessToken;
+          }
+
+          // Récupérer les stats depuis l'API TikTok
+          const videoStats = await tiktokService.getVideoStats(accessToken, [updated.tiktokVideoId]);
+          
+          if (videoStats.length > 0) {
+            const stats = videoStats[0];
+            
+            // Mettre à jour les stats dans la base
+            await db
+              .update(videoStatsCurrent)
+              .set({
+                views: stats.views,
+                likes: stats.likes,
+                comments: stats.comments,
+                shares: stats.shares,
+                updatedAt: new Date(),
+              })
+              .where(eq(videoStatsCurrent.submissionId, updated.id));
+            
+            console.log(`[ValidateSubmission] Stats mises à jour pour la soumission ${updated.id}: ${stats.views} vues`);
+          } else {
+            console.log(`[ValidateSubmission] Aucune stat trouvée pour la vidéo ${updated.tiktokVideoId}`);
+          }
         }
       } catch (statsError) {
         // Ne pas bloquer l'approbation si le refresh des stats échoue

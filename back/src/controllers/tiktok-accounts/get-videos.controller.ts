@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../../db/index';
-import { tiktokAccounts } from '../../db/schema';
+import { tiktokAccounts, users } from '../../db/schema';
 import { tiktokService } from '../../services/tiktok.service';
 import type { TiktokVideosListResponse } from '@shared/types/tiktok';
 import type { AuthUser } from '@shared/types/auth';
@@ -48,12 +48,20 @@ export const getVideos = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Récupérer l'utilisateur pour vérifier new_20
+    const [user] = await db.select().from(users).where(eq(users.id, account.userId)).limit(1);
+
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur non trouvé', code: 'USER_NOT_FOUND' });
+      return;
+    }
+
     // Vérifier si le token doit être rafraîchi
     let accessToken = account.accessToken;
 
     if (tiktokService.isTokenExpired(account.expiresAt)) {
       try {
-        const newTokens = await tiktokService.refreshAccessToken(account.refreshToken);
+        const newTokens = await tiktokService.refreshAccessToken(account.refreshToken, user.new_20);
 
         // Mettre à jour les tokens en base
         await db
