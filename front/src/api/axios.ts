@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/auth';
 // En production (Vercel), utiliser directement l'URL Railway
 // En dev local, utiliser le proxy /api-local vers localhost:3000
 export const BASE_URL = import.meta.env.PROD
-  ? "https://ugc-production-9234.up.railway.app"
-  : "/api-local";
+  ? "https://back-production-b3c5.up.railway.app"
+  : "/api-prod";
 
 const axiosInstance = axios.create({ baseURL: BASE_URL });
 
