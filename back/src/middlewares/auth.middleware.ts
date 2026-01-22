@@ -13,15 +13,9 @@ export interface AuthenticatedRequest extends Request {
  * Vérifie le token et ajoute l'utilisateur à la requête
  */
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.middleware.ts:15',message:'authMiddleware called',data:{method:req.method,path:req.path,url:req.url,hasAuthHeader:!!req.headers.authorization},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.middleware.ts:19',message:'Auth failed - no token',data:{path:req.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     res.status(401).json({ error: 'Token manquant', code: 'NO_TOKEN' });
     return;
   }
@@ -30,6 +24,9 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
+    // #region agent log
+    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.middleware.ts:32',message:'Token decoded',data:{userId:decoded.id,userEmail:decoded.email,isBrand:decoded.isBrand,path:req.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     req.user = decoded;
     next();
   } catch (error) {
