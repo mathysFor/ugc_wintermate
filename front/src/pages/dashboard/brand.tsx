@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import { useAuthStore } from '@/stores/auth';
 import { useGetAllCampaigns } from '@/api/campaigns';
@@ -59,14 +58,7 @@ const formatMonth = (monthStr: string): string => {
   return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
 };
 
-// Animation counter component
-const AnimatedNumber = ({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) => {
-  return (
-    <span className="tabular-nums">
-      {prefix}{formatNumber(value)}{suffix}
-    </span>
-  );
-};
+
 
 export const BrandDashboardPage = () => {
   const user = useAuthStore((s) => s.user);
@@ -165,34 +157,7 @@ export const BrandDashboardPage = () => {
   }, [selectedMetric, selectedCampaignId]);
 
   // Détermine les Bars à afficher selon la métrique sélectionnée (pour le mode multi-campagnes)
-  const barsToRender = useMemo(() => {
-    if (selectedMetric === 'views') {
-      if (selectedCampaignId !== 'all') {
-        return [{ id: 'single', dataKey: 'views', name: 'Vues', color: '#22d3ee' }];
-      }
-      if (uniqueCampaigns.length > 0) {
-        return uniqueCampaigns.map((c) => ({
-          id: c.id,
-          dataKey: `campaign_${c.id}`,
-          name: c.title,
-          color: c.color,
-        }));
-      }
-      return [{ id: 'total', dataKey: 'totalViews', name: 'Vues totales', color: '#22d3ee' }];
-    } else if (selectedMetric === 'spent') {
-      return [{ id: 'spent', dataKey: 'totalSpent', name: 'Budget dépensé', color: '#4ade80' }];
-    } else if (selectedMetric === 'acceptedVideos') {
-      return [{ id: 'videos', dataKey: 'acceptedVideos', name: 'Vidéos acceptées', color: '#a78bfa' }];
-    } else if (selectedMetric === 'activeCampaigns') {
-      return [{ id: 'campaigns', dataKey: 'activeCampaigns', name: 'Campagnes actives', color: '#f472b6' }];
-    } else if (selectedMetric === 'creators') {
-      return [{ id: 'creators', dataKey: 'creators', name: 'Créateurs', color: '#fbbf24' }];
-    } else if (selectedMetric === 'cpm') {
-      return [{ id: 'cpm', dataKey: 'cpm', name: 'CPM moyen', color: '#fb923c' }];
-    }
-    return [];
-  }, [selectedCampaignId, uniqueCampaigns, selectedMetric]);
-
+ 
   // Check if we have data to display
   const hasData = useMemo(() => {
     if (selectedMetric === 'views') {
