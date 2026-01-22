@@ -24,6 +24,9 @@ export { BrandSubmissionsPage } from './brand-submissions';
 // Videos
 export { BrandVideosPage } from './brand-videos';
 
+// Creators
+export { BrandCreatorsPage } from './brand-creators';
+
 // Invoices
 export { InvoicesPage } from './invoices';
 export { BrandInvoicesPage } from './brand-invoices';

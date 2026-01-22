@@ -12,6 +12,11 @@ import invoicesRoutes from './routes/invoices.routes';
 import notificationsRoutes from './routes/notifications.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import referralRoutes from './routes/referral.routes';
+import creatorsRoutes from './routes/creators.routes';
+
+// #region agent log
+fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.ts:15',message:'Importing creatorsRoutes',data:{hasCreatorsRoutes:!!creatorsRoutes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+// #endregion
 
 const app = express();
 
@@ -54,9 +59,17 @@ app.use('/api/invoices', invoicesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/referral', referralRoutes);
+app.use('/api/creators', creatorsRoutes);
+
+// #region agent log
+fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.ts:58',message:'Registered /api/creators route',data:{creatorsRoutesType:typeof creatorsRoutes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+// #endregion
 
 // 404 handler
 app.use((req: Request, res: Response) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.ts:61',message:'404 handler triggered',data:{method:req.method,path:req.path,url:req.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   res.status(404).json({ error: 'Route non trouvée', code: 'NOT_FOUND' });
 });
 

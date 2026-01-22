@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 // En production (Vercel), utiliser directement l'URL Railway
 // En dev local, utiliser le proxy /api-local vers localhost:3000
 export const BASE_URL = import.meta.env.PROD
-  ? "https://back-production-b3c5.up.railway.app"
+  ? "https://ugc-production-9234.up.railway.app"
   : "/api-local";
 
 const axiosInstance = axios.create({ baseURL: BASE_URL });
@@ -50,7 +50,12 @@ export const axiosGet = <_, ResponseData>(
   url: string,
   params: unknown,
   timeout = 60000
-) => axiosRequest<ResponseData>({ method: "GET", url, params, timeout });
+) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'axios.ts:49',message:'axiosGet called',data:{url,baseURL:BASE_URL,fullUrl:`${BASE_URL}${url}`,params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+  return axiosRequest<ResponseData>({ method: "GET", url, params, timeout });
+};
 
 /**
  * Upload de fichiers avec FormData

@@ -76,6 +76,12 @@ export const MainLayout = ({ children }: { children?: ReactNode }) => {
       show: true
     },
     {
+      name: 'Créateurs',
+      href: '/brand/creators',
+      icon: Users,
+      show: !!isBrand
+    },
+    {
       name: 'Soumissions',
       href: isBrand ? '/brand/submissions' : '/submissions',
       icon: FileText,

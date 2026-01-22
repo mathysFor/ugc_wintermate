@@ -1,0 +1,12 @@
+# Type: [shared] ou [brand1] ou [brand2]
+# 
+# [shared] = Amélioration à partager avec l'autre brand
+# [brand1] = Modification spécifique à Brand 1 uniquement
+# [brand2] = Modification spécifique à Brand 2 uniquement
+#
+# Format: [type] feat/fix/refactor/style/docs: description
+#
+# Exemples:
+# [shared] feat: nouvelle fonctionnalité partagée
+# [shared] fix: correction bug API
+# [brand1] style: logo personnalisé Brand 1

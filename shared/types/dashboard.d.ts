@@ -8,6 +8,10 @@ export type BrandMonthlyData = {
   month: string;
   totalViews: number;
   totalCost: number;
+  acceptedVideosCount: number;
+  activeCampaignsCount: number;
+  creatorsCount: number;
+  averageCpm: number;
   campaignBreakdown: CampaignMonthlyViews[];
 };
 
@@ -19,6 +23,11 @@ export type BrandDashboardStats = {
   averageRoi: number;
   viewsTrend: number;
   spentTrend: number;
+  creatorsCount: number;
+  acceptedVideosCount: number;
+  averageCpm: number;
+  acceptedVideosTrend: number;
+  creatorsTrend: number;
 };
 
 export type BrandDashboardStatsResponse = BrandDashboardStats;
