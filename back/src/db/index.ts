@@ -17,11 +17,26 @@ let pool: Pool;
 let db: ReturnType<typeof drizzle>;
 
 if (process.env.DATABASE_URL) {
-  console.log('[DB] Connexion à la base de données...', {
-    hasUrl: !!process.env.DATABASE_URL,
-    urlLength: process.env.DATABASE_URL?.length,
-    urlPreview: process.env.DATABASE_URL?.substring(0, 30) + '...',
-  });
+  try {
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    const dbName = dbUrl.pathname.replace('/', '');
+    const dbHost = dbUrl.hostname;
+    
+    console.log('[DB] Connexion à la base de données...', {
+      database: dbName,
+      host: dbHost,
+      hasUrl: !!process.env.DATABASE_URL,
+      urlLength: process.env.DATABASE_URL?.length,
+      urlPreview: process.env.DATABASE_URL?.substring(0, 50) + '...',
+    });
+  } catch (e) {
+    console.log('[DB] Connexion à la base de données...', {
+      hasUrl: !!process.env.DATABASE_URL,
+      urlLength: process.env.DATABASE_URL?.length,
+      urlPreview: process.env.DATABASE_URL?.substring(0, 50) + '...',
+      parseError: e instanceof Error ? e.message : String(e),
+    });
+  }
 
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
