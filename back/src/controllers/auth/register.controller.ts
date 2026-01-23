@@ -90,7 +90,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         isBrand: false,
         referralCode: newReferralCode,
         referredById: referrerId,
-        new_20: true,
       })
       .returning();
 
