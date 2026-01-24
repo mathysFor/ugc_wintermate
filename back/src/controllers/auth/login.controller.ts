@@ -50,6 +50,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       referredById: user[0].referredById ?? null,
       new_20: user[0].new_20,
       createdAt: user[0].createdAt.toISOString(),
+      appsflyerLink: user[0].appsflyerLink ?? null,
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
