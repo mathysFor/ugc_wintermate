@@ -43,6 +43,13 @@
       "when": 1769254717244,
       "tag": "0005_same_chameleon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769262054011,
+      "tag": "0006_organic_hydra",
+      "breakpoints": true
     }
   ]
 }

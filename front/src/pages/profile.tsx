@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Lock, Share2, Building2, LogOut, Pencil, Upload, X, Loader2, Camera } from 'lucide-react';
+import { Lock, Share2, Building2, LogOut, Pencil, Upload, X, Loader2, Camera, Link2, Copy, Check } from 'lucide-react';
 import { queryClient } from '@/api/query-config';
 import type { BrandSector } from '@shared/types/brands';
 
@@ -163,11 +163,10 @@ export const ProfilePage = () => {
   };
 
   const handleCopyAppsflyerLink = () => {
-    if (user?.appsflyerLink) {
-      navigator.clipboard.writeText(user.appsflyerLink);
-      setAppsflyerCopied(true);
-      setTimeout(() => setAppsflyerCopied(false), 2000);
-    }
+    const link = "https://wintermate.onelink.me/ESqa/hlzs5xd3";
+    navigator.clipboard.writeText(link);
+    setAppsflyerCopied(true);
+    setTimeout(() => setAppsflyerCopied(false), 2000);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,40 +295,46 @@ export const ProfilePage = () => {
             </Card>
           )}
 
-          {/* AppsFlyer Link (Creators Only) */}
-          {user?.isCreator && user?.appsflyerLink && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Share2 className="text-[#ED5D3B]" size={20} />
-                  Lien d'affiliation App
-                </CardTitle>
-                <CardDescription>
-                  Partagez ce lien pour inviter d'autres créateurs via l'application.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                 <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <code className="flex-1 text-sm text-slate-600 truncate font-mono">
-                      {user.appsflyerLink}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className={appsflyerCopied ? "text-green-600" : "text-slate-500 hover:text-slate-900"}
-                      onClick={handleCopyAppsflyerLink}
-                    >
-                      {appsflyerCopied ? (
-                        <span className="flex items-center gap-1">
-                          Copié !
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          Copier
-                        </span>
-                      )}
-                    </Button>
+          {/* App Link for Bio (Creators Only) */}
+          {user?.isCreator && (
+            <Card className="overflow-hidden border-sky-100">
+              <div className="bg-gradient-to-r from-sky-500 to-[#0EA5E9] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Link2 className="text-white" size={20} />
                   </div>
+                  <div>
+                    <p className="font-semibold text-white">Lien App pour votre Bio</p>
+                    <p className="text-sky-100 text-sm">Ajoutez-le dans votre bio Instagram ou TikTok</p>
+                  </div>
+                </div>
+              </div>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <code className="flex-1 text-sm text-slate-600 truncate font-mono">
+                    https://wintermate.onelink.me/ESqa/hlzs5xd3
+                  </code>
+                  <Button
+                    size="sm"
+                    onClick={handleCopyAppsflyerLink}
+                    className={appsflyerCopied 
+                      ? "bg-green-500 hover:bg-green-600 text-white" 
+                      : "bg-sky-500 hover:bg-sky-600 text-white"
+                    }
+                  >
+                    {appsflyerCopied ? (
+                      <>
+                        <Check size={16} className="mr-1" />
+                        Copié !
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} className="mr-1" />
+                        Copier
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
