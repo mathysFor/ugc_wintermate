@@ -30,7 +30,7 @@ class AppsFlyerService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'authentication': APPSFLYER_DEV_KEY,
+          'authorization': APPSFLYER_DEV_KEY,
         },
         body: JSON.stringify({
           data: {
