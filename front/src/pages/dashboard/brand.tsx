@@ -30,7 +30,11 @@ import {
   ChevronDown,
   Users,
   CheckCircle,
+  Calendar,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
+import type { DashboardPeriod } from '@shared/types/dashboard';
 
 // Couleurs vibrantes pour les campagnes
 const CAMPAIGN_COLORS = [
@@ -62,6 +66,13 @@ const formatMonth = (monthStr: string): string => {
 
 export const BrandDashboardPage = () => {
   const user = useAuthStore((s) => s.user);
+  
+  // États pour le filtrage par date
+  const [period, setPeriod] = useState<DashboardPeriod>('12m');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [showActiveCreatorsOnly, setShowActiveCreatorsOnly] = useState(false);
+
   const { data: brand, isLoading: loadingBrand } = useGetMyBrand();
   const { data: campaigns, isLoading: loadingCampaigns } = useGetAllCampaigns({ status: 'all' });
   const { data: dashboardStats, isLoading: loadingStats } = useGetBrandDashboardStats();
@@ -124,14 +135,21 @@ export const BrandDashboardPage = () => {
       } else if (selectedMetric === 'activeCampaigns') {
         data.activeCampaigns = month.activeCampaignsCount;
       } else if (selectedMetric === 'creators') {
-        data.creators = month.creatorsCount;
+        if (showActiveCreatorsOnly) {
+          data.creators = month.creatorsCount;
+        } else {
+          // Utiliser platformCreatorsCount s'il existe (nouveau backend), sinon fallback sur creatorsCount (ancien comportement)
+          // Mais attention, creatorsCount = actifs. Donc si platformCreatorsCount n'existe pas, on affiche 0 ou on garde l'ancien comportement ?
+          // Pour l'instant, on suppose que le backend renvoie platformCreatorsCount.
+          data.creators = 'platformCreatorsCount' in month ? ((month as any).platformCreatorsCount || 0) : month.creatorsCount;
+        }
       } else if (selectedMetric === 'cpm') {
         data.cpm = month.averageCpm / 100; // Convertir centimes en euros
       }
 
       return data;
     });
-  }, [dashboardStats, selectedCampaignId, uniqueCampaigns, selectedMetric]);
+  }, [dashboardStats, selectedCampaignId, uniqueCampaigns, selectedMetric, showActiveCreatorsOnly]);
 
   const selectedCampaignName = selectedCampaignId === 'all'
     ? 'Toutes les campagnes'
@@ -144,7 +162,7 @@ export const BrandDashboardPage = () => {
       spent: { dataKey: 'totalSpent', name: 'Budget dépensé', color: '#4ade80', gradient: 'url(#gradientSpent)' },
       acceptedVideos: { dataKey: 'acceptedVideos', name: 'Vidéos acceptées', color: '#a78bfa', gradient: 'url(#gradientVideos)' },
       activeCampaigns: { dataKey: 'activeCampaigns', name: 'Campagnes actives', color: '#f472b6', gradient: 'url(#gradientCampaigns)' },
-      creators: { dataKey: 'creators', name: 'Créateurs', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
+      creators: { dataKey: 'creators', name: showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
       cpm: { dataKey: 'cpm', name: 'CPM moyen', color: '#fb923c', gradient: 'url(#gradientCpm)' },
     };
     
@@ -154,7 +172,7 @@ export const BrandDashboardPage = () => {
     }
     
     return configs[selectedMetric] || configs.views;
-  }, [selectedMetric, selectedCampaignId]);
+  }, [selectedMetric, selectedCampaignId, showActiveCreatorsOnly]);
 
   // Détermine les Bars à afficher selon la métrique sélectionnée (pour le mode multi-campagnes)
  
@@ -339,21 +357,54 @@ export const BrandDashboardPage = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           <CardContent className="p-3 sm:p-4 md:p-6 relative">
             <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-              <p className="text-xs sm:text-sm font-medium text-slate-500">Créateurs</p>
-              <div className="p-1.5 sm:p-2 bg-sky-100 text-sky-600 rounded-lg group-hover:scale-110 transition-transform">
-                <Users size={16} className="sm:w-5 sm:h-5" />
+              <p className="text-xs sm:text-sm font-medium text-slate-500">
+                {showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs'}
+              </p>
+              <div className="flex items-center gap-2">
+                {/* Toggle Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowActiveCreatorsOnly(!showActiveCreatorsOnly);
+                  }}
+                  className="text-slate-400 hover:text-sky-600 transition-colors transform hover:scale-110"
+                  title={showActiveCreatorsOnly ? "Voir tous les créateurs" : "Voir mes créateurs actifs"}
+                >
+                  {showActiveCreatorsOnly ? <ToggleRight size={32} className="text-sky-500" /> : <ToggleLeft size={32} />}
+                </button>
+                <div className="p-1.5 sm:p-2 bg-sky-100 text-sky-600 rounded-lg group-hover:scale-110 transition-transform">
+                  <Users size={16} className="sm:w-5 sm:h-5" />
+                </div>
               </div>
             </div>
-            <div className="flex items-baseline gap-1 sm:gap-2">
+            <div className="flex flex-col gap-1 sm:gap-2">
               {loadingStats ? (
                 <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
               ) : (
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
-                  {dashboardStats?.creatorsCount || 0}
-                </p>
+                <>
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+                      {showActiveCreatorsOnly 
+                        ? (dashboardStats?.activeCreatorsCount || 0) 
+                        : (dashboardStats?.creatorsCount || 0)
+                      }
+                    </p>
+                    {!showActiveCreatorsOnly && dashboardStats?.platformCreatorsTrend !== undefined && (
+                      <Badge
+                        variant={dashboardStats.platformCreatorsTrend >= 0 ? 'success' : 'destructive'}
+                        className="text-[10px] sm:text-xs"
+                      >
+                        {dashboardStats.platformCreatorsTrend >= 0 ? '+' : ''}
+                        {dashboardStats.platformCreatorsTrend}%
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">
+                    {showActiveCreatorsOnly ? 'actifs sur vos campagnes' : 'inscrits sur la plateforme'}
+                  </p>
+                </>
               )}
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">sur la plateforme</p>
           </CardContent>
         </Card>
 
@@ -446,19 +497,19 @@ export const BrandDashboardPage = () => {
               </div>
               <div>
                 <CardTitle className="text-base sm:text-lg font-semibold text-slate-900">
-                  {selectedMetric === 'views' && 'Vues par mois'}
-                  {selectedMetric === 'spent' && 'Budget dépensé par mois'}
-                  {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées par mois'}
-                  {selectedMetric === 'activeCampaigns' && 'Campagnes actives par mois'}
-                  {selectedMetric === 'creators' && 'Créateurs par mois'}
-                  {selectedMetric === 'cpm' && 'CPM moyen par mois'}
+                  {selectedMetric === 'views' && 'Vues'}
+                  {selectedMetric === 'spent' && 'Budget dépensé'}
+                  {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
+                  {selectedMetric === 'activeCampaigns' && 'Campagnes actives'}
+                  {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits')}
+                  {selectedMetric === 'cpm' && 'CPM moyen'}
                 </CardTitle>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                   {selectedMetric === 'views' && 'Performance sur les 12 derniers mois'}
                   {selectedMetric === 'spent' && 'Évolution des dépenses'}
                   {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
                   {selectedMetric === 'activeCampaigns' && 'Campagnes en cours'}
-                  {selectedMetric === 'creators' && 'Créateurs participants'}
+                  {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs participant à vos campagnes' : 'Évolution du nombre de créateurs sur la plateforme')}
                   {selectedMetric === 'cpm' && 'Coût pour 1000 vues'}
                 </p>
               </div>
@@ -471,7 +522,11 @@ export const BrandDashboardPage = () => {
                 {selectedMetric === 'spent' && `${((dashboardStats?.totalSpent || 0) / 100).toFixed(0)}€`}
                 {selectedMetric === 'acceptedVideos' && (dashboardStats?.acceptedVideosCount || 0)}
                 {selectedMetric === 'activeCampaigns' && (dashboardStats?.activeCampaigns || 0)}
-                {selectedMetric === 'creators' && (dashboardStats?.creatorsCount || 0)}
+                {selectedMetric === 'creators' && (
+                  showActiveCreatorsOnly 
+                    ? (dashboardStats?.creatorsCount || 0) 
+                    : (dashboardStats?.chartData?.[dashboardStats.chartData.length - 1]?.platformCreatorsCount || 0)
+                )}
                 {selectedMetric === 'cpm' && `${((dashboardStats?.averageCpm || 0) / 100).toFixed(2)}€`}
               </p>
               <p className="text-xs text-slate-500 uppercase tracking-wider">Total</p>

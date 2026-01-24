@@ -4,6 +4,27 @@ export type CampaignMonthlyViews = {
   views: number;
 };
 
+export type DashboardPeriod = 'today' | '7d' | '14d' | '30d' | '12m' | 'custom';
+
+export interface BrandStatsQuery {
+  period?: DashboardPeriod;
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+}
+
+export type ChartDataPoint = {
+  date: string; // YYYY-MM-DD or YYYY-MM
+  label: string; // Formatted label for display
+  totalViews: number;
+  totalCost: number;
+  acceptedVideosCount: number;
+  activeCampaignsCount: number;
+  creatorsCount: number;
+  platformCreatorsCount?: number;
+  averageCpm: number;
+  campaignBreakdown: CampaignMonthlyViews[];
+};
+
 export type BrandMonthlyData = {
   month: string;
   totalViews: number;
@@ -17,6 +38,7 @@ export type BrandMonthlyData = {
 
 export type BrandDashboardStats = {
   monthlyData: BrandMonthlyData[];
+  chartData?: ChartDataPoint[];
   totalViews: number;
   totalSpent: number;
   activeCampaigns: number;
@@ -24,6 +46,8 @@ export type BrandDashboardStats = {
   viewsTrend: number;
   spentTrend: number;
   creatorsCount: number;
+  activeCreatorsCount: number;
+  platformCreatorsTrend?: number;
   acceptedVideosCount: number;
   averageCpm: number;
   acceptedVideosTrend: number;
@@ -121,4 +145,3 @@ export type CreatorDashboardStatsResponse = {
     isValid: boolean;
   }>;
 };
-
