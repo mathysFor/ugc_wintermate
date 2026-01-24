@@ -12,12 +12,69 @@ import {
   users,
   tiktokAccounts,
 } from '../../db/schema';
-import type {
+import {
   BrandDashboardStats,
   BrandMonthlyData,
   CampaignMonthlyViews,
+  DashboardPeriod, // Added
 } from '@shared/types/dashboard';
 import type { AuthUser } from '@shared/types/auth';
+import { getWinterMateStats, initializeFirebase } from '../../services/firebase.service';
+
+/**
+ * Calcule la plage de dates en fonction de la période demandée
+ */
+const getDateRange = (
+  period: DashboardPeriod,
+  customStartDate?: string,
+  customEndDate?: string
+): { startDate: Date; endDate: Date; granularity: 'day' | 'month' } => {
+  let endDate = new Date();
+  endDate.setHours(23, 59, 59, 999);
+  let startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  let granularity: 'day' | 'month' = 'day';
+
+  switch (period) {
+    case 'today':
+      break;
+    case '7d':
+      startDate.setDate(startDate.getDate() - 6);
+      break;
+    case '14d':
+      startDate.setDate(startDate.getDate() - 13);
+      break;
+    case '30d':
+      startDate.setDate(startDate.getDate() - 29);
+      break;
+    case '12m':
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1);
+      granularity = 'month';
+      break;
+    case 'custom':
+      if (customStartDate) {
+        startDate = new Date(customStartDate);
+        startDate.setHours(0, 0, 0, 0);
+      }
+      if (customEndDate) {
+        endDate = new Date(customEndDate);
+        endDate.setHours(23, 59, 59, 999);
+      }
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 60) {
+        granularity = 'month';
+      }
+      break;
+    default:
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1);
+      granularity = 'month';
+  }
+
+  return { startDate, endDate, granularity };
+};
 
 /**
  * Récupère les statistiques du dashboard pour une marque
@@ -34,6 +91,16 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       res.status(401).json({ error: 'Non authentifié', code: 'UNAUTHORIZED' });
       return;
     }
+
+    // Initialize Firebase
+    initializeFirebase();
+
+    // Paramètres de filtrage
+    const period = (req.query.period as DashboardPeriod) || '12m';
+    const customStartDate = req.query.startDate as string;
+    const customEndDate = req.query.endDate as string;
+
+    const { startDate, endDate, granularity } = getDateRange(period, customStartDate, customEndDate);
 
     // Récupérer la marque de l'utilisateur
     const [brand] = await db
@@ -76,10 +143,18 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       .where(eq(users.isCreator, true));
     const creatorsCount = Number(creatorsCountResult[0]?.count || 0);
 
+    // Fetch WinterMate stats
+    const periodDuration = endDate.getTime() - startDate.getTime();
+    const previousEndDate = new Date(startDate.getTime() - 1);
+    const previousStartDate = new Date(previousEndDate.getTime() - periodDuration);
+    
+    const winterMateStats = await getWinterMateStats(startDate, endDate, previousStartDate, previousEndDate);
+
     if (campaignIds.length === 0) {
       // Pas de campagnes, retourner des stats vides
       const emptyStats: BrandDashboardStats = {
         monthlyData: [],
+        chartData: [],
         totalViews: 0,
         totalSpent: 0,
         activeCampaigns: 0,
@@ -91,12 +166,17 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         averageCpm: 0,
         acceptedVideosTrend: 0,
         creatorsTrend: 0,
+        winterMateUsers: {
+          count: winterMateStats.count,
+          trend: winterMateStats.trend,
+        },
       };
       res.json(emptyStats);
       return;
     }
 
-    // Date il y a 12 mois
+    // Date il y a 12 mois (Fallback if not using dynamic dates for queries below, but we should use startDate/endDate)
+    // For now, let's keep the existing logic but try to inject winterMate stats into the monthly map.
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
@@ -291,6 +371,13 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         // totalCost est en centimes, donc on multiplie par 1000 pour avoir le CPM en centimes
         monthData.averageCpm = Math.round((monthData.totalCost / monthData.totalViews) * 1000);
       }
+
+      // Calculate WinterMate users count for this month (cumulative)
+      const [year, month] = monthKey.split('-').map(Number);
+      const monthEndDate = new Date(year, month, 0, 23, 59, 59, 999);
+      
+      const count = (winterMateStats.creationDates || []).filter(d => d <= monthEndDate).length;
+      monthData.winterMateUsersCount = count;
     }
 
     // Calculer les totaux
@@ -375,6 +462,7 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
 
     const stats: BrandDashboardStats = {
       monthlyData,
+      chartData: [], // Fallback as frontend seems to rely on monthlyData currently or we need to map it if chartData is required
       totalViews,
       totalSpent,
       activeCampaigns,
@@ -385,7 +473,11 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       acceptedVideosCount,
       averageCpm,
       acceptedVideosTrend,
-      creatorsTrend: 0, // Pas de calcul de tendance pour les créateurs
+      creatorsTrend: 0,
+      winterMateUsers: {
+        count: winterMateStats.count,
+        trend: winterMateStats.trend,
+      },
     };
 
     // #region agent log
