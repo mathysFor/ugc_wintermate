@@ -37,8 +37,8 @@ export type BrandMonthlyData = {
 };
 
 export type BrandDashboardStats = {
-  monthlyData: BrandMonthlyData[];
-  chartData?: ChartDataPoint[];
+  monthlyData: BrandMonthlyData[]; // Deprecated, use chartData
+  chartData: ChartDataPoint[];
   totalViews: number;
   totalSpent: number;
   activeCampaigns: number;
@@ -106,6 +106,7 @@ export type CreatorDashboardStatsResponse = {
     campaignTitle?: string;
     submittedAt?: string;
     tiktokVideoId?: string;
+    tiktokAccountId?: number;
   }>;
   topVideosByEarnings?: Array<{
     videoId: string;
@@ -116,6 +117,7 @@ export type CreatorDashboardStatsResponse = {
     submissionId?: number;
     campaignTitle?: string;
     tiktokVideoId?: string;
+    tiktokAccountId?: number;
   }>;
   submissionsByMonth: Array<{
     month: string;

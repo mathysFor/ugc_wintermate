@@ -2,15 +2,17 @@ import { useFetcher } from "@/api/api";
 import type {
   BrandDashboardStatsResponse,
   CreatorDashboardStatsResponse,
+  BrandStatsQuery,
 } from "@shared/types/dashboard";
 
 /**
  * Hook pour récupérer les statistiques du dashboard marque
  */
-export const useGetBrandDashboardStats = (options = {}) =>
-  useFetcher<undefined, BrandDashboardStatsResponse>({
-    key: ["dashboard", "brand", "stats"],
+export const useGetBrandDashboardStats = (params?: BrandStatsQuery, options = {}) =>
+  useFetcher<BrandStatsQuery, BrandDashboardStatsResponse>({
+    key: ["dashboard", "brand", "stats", params],
     path: "/api/dashboard/brand/stats",
+    params,
     options,
   });
 
@@ -23,4 +25,3 @@ export const useGetCreatorDashboardStats = (options = {}) =>
     path: "/api/dashboard/creator/stats",
     options,
   });
-

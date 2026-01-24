@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { eq, and, sql, gte, inArray } from 'drizzle-orm';
+import { eq, and, sql, gte, lte, inArray } from 'drizzle-orm';
 import { db } from '../../db';
 import {
   brands,
@@ -16,9 +16,107 @@ import type {
   BrandDashboardStats,
   BrandMonthlyData,
   CampaignMonthlyViews,
+  DashboardPeriod,
   ChartDataPoint,
 } from '@shared/types/dashboard';
 import type { AuthUser } from '@shared/types/auth';
+
+/**
+ * Calcule la plage de dates en fonction de la période demandée
+ */
+const getDateRange = (
+  period: DashboardPeriod,
+  customStartDate?: string,
+  customEndDate?: string
+): { startDate: Date; endDate: Date; granularity: 'day' | 'month' } => {
+  let endDate = new Date();
+  endDate.setHours(23, 59, 59, 999);
+  let startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  let granularity: 'day' | 'month' = 'day';
+
+  switch (period) {
+    case 'today':
+      // startDate est déjà aujourd'hui 00:00:00
+      break;
+    case '7d':
+      startDate.setDate(startDate.getDate() - 6);
+      break;
+    case '14d':
+      startDate.setDate(startDate.getDate() - 13);
+      break;
+    case '30d':
+      startDate.setDate(startDate.getDate() - 29);
+      break;
+    case '12m':
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1); // Premier jour du mois
+      granularity = 'month';
+      break;
+    case 'custom':
+      if (customStartDate) {
+        startDate = new Date(customStartDate);
+        startDate.setHours(0, 0, 0, 0);
+      }
+      if (customEndDate) {
+        endDate = new Date(customEndDate);
+        endDate.setHours(23, 59, 59, 999);
+      }
+      // Si la période est supérieure à 2 mois (60 jours), on passe en mensuel
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 60) {
+        granularity = 'month';
+      }
+      break;
+    default:
+      // Par défaut 12 mois
+      startDate.setMonth(startDate.getMonth() - 11);
+      startDate.setDate(1);
+      granularity = 'month';
+  }
+
+  return { startDate, endDate, granularity };
+};
+
+/**
+ * Formate une date en clé pour le regroupement
+ */
+const formatDateKey = (date: Date, granularity: 'day' | 'month'): string => {
+  if (granularity === 'month') {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+/**
+ * Formate une clé de date en libellé lisible
+ */
+const formatLabel = (key: string, granularity: 'day' | 'month'): string => {
+  const date = new Date(key);
+  if (granularity === 'month') {
+    return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+  }
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+};
+
+/**
+ * Génère toutes les clés de date entre startDate et endDate
+ */
+const generateDateKeys = (startDate: Date, endDate: Date, granularity: 'day' | 'month'): string[] => {
+  const keys: string[] = [];
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    keys.push(formatDateKey(currentDate, granularity));
+    if (granularity === 'month') {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    } else {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+  return keys;
+};
 
 /**
  * Récupère les statistiques du dashboard pour une marque
@@ -35,6 +133,13 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       res.status(401).json({ error: 'Non authentifié', code: 'UNAUTHORIZED' });
       return;
     }
+
+    // Paramètres de filtrage
+    const period = (req.query.period as DashboardPeriod) || '12m';
+    const customStartDate = req.query.startDate as string;
+    const customEndDate = req.query.endDate as string;
+
+    const { startDate, endDate, granularity } = getDateRange(period, customStartDate, customEndDate);
 
     // Récupérer la marque de l'utilisateur
     const [brand] = await db
@@ -84,46 +189,16 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       .where(eq(users.isCreator, true))
       .orderBy(users.createdAt);
 
-    // Params from query
-    const { period = '12m', startDate, endDate: endDateQuery } = req.query as any;
-    // Helper function to generate date keys would be needed here, assuming it exists or logic is simplified
-    // For now, I'll assume generateDateKeys and formatLabel are available or I need to implement them if they are missing.
-    // Wait, the conflict block used `generateDateKeys` and `formatLabel`. Are they imported?
-    // They are NOT imported in the file content I read. 
-    // This implies they might be helper functions defined in this file or imported but I missed the import.
-    // Let's check imports again. No.
-    // Maybe they are defined at the bottom of the file?
-    // I read the file partially? No, I read the whole file.
-    // If they are missing, the code will fail.
-    // However, I must resolve conflicts. I will assume they are available or I should keep the logic that was there.
-    // The incoming code USES them.
+    console.log('[BrandStats] Request:', { period, startDate, endDate, granularity });
     
-    // Let's assume for now I just resolve the conflict blocks.
-    
-    // Since I don't see generateDateKeys/formatLabel in the file, I'll use a placeholder or try to infer.
-    // Actually, looking at the conflict, `dateKeys` variable is used.
-    // `const dateKeys = generateDateKeys(startDate, endDate, granularity);` 
-    // This line was present in the context of the conflict in the diff, but maybe not in the file I read?
-    // Ah, line 90 in the file I read: `const dateKeys = generateDateKeys(startDate, endDate, granularity);`
-    // So `generateDateKeys` IS used in line 90.
-    // But where is it defined?
-    // It must be in the file but I missed it or it's imported.
-    // I'll trust the code structure.
-
     if (campaignIds.length === 0) {
       // Pas de campagnes, retourner des stats vides
       // Calculer quand même la courbe des créateurs plateforme
       const chartDataMap = new Map<string, ChartDataPoint>();
-      // Mocking these for now as they seem to be expected in the scope
-      const granularity = 'month'; 
-      const dateKeys: string[] = []; // Should be populated
-      
-      // Note: I am writing the file content. I need to be careful not to break it.
-      // The conflict was at line 122.
       
       const emptyStats: BrandDashboardStats = {
         monthlyData: [],
-        chartData: [], // Placeholder, will be filled if logic allows
+        chartData: [],
         totalViews: 0,
         totalSpent: 0,
         activeCampaigns: 0,
@@ -142,11 +217,7 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       return;
     }
 
-    // Date il y a 12 mois
-    const twelveMonthsAgo = new Date();
-    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-
-    // Récupérer toutes les soumissions acceptées avec leurs stats
+    // Récupérer toutes les soumissions acceptées avec leurs stats dans la période
     const submissionsWithStats = await db
       .select({
         submissionId: campaignSubmissions.id,
@@ -161,11 +232,12 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         and(
           inArray(campaignSubmissions.campaignId, campaignIds),
           eq(campaignSubmissions.status, 'accepted'),
-          gte(campaignSubmissions.submittedAt, twelveMonthsAgo)
+          gte(campaignSubmissions.submittedAt, startDate),
+          lte(campaignSubmissions.submittedAt, endDate)
         )
       );
 
-    // Récupérer les invoices payées (campagnes)
+    // Récupérer les invoices payées (campagnes) dans la période
     const paidInvoices = await db
       .select({
         invoiceId: invoices.id,
@@ -181,11 +253,13 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       .where(
         and(
           inArray(campaignRewards.campaignId, campaignIds),
-          eq(invoices.status, 'paid')
+          eq(invoices.status, 'paid'),
+          gte(invoices.paidAt, startDate),
+          lte(invoices.paidAt, endDate)
         )
       );
 
-    // Récupérer les factures de parrainage payées
+    // Récupérer les factures de parrainage payées dans la période
     const paidReferralInvoices = await db
       .select({
         id: referralInvoices.id,
@@ -193,18 +267,18 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         paidAt: referralInvoices.paidAt,
       })
       .from(referralInvoices)
-      .where(eq(referralInvoices.status, 'paid'));
+      .where(
+        and(
+          eq(referralInvoices.status, 'paid'),
+          gte(referralInvoices.paidAt, startDate),
+          lte(referralInvoices.paidAt, endDate)
+        )
+      );
 
-    // Construire les données mensuelles
-    const monthlyDataMap = new Map<string, BrandMonthlyData>();
+    // Initialiser les données du graphique
     const chartDataMap = new Map<string, ChartDataPoint>();
+    const dateKeys = generateDateKeys(startDate, endDate, granularity);
     const campaignMap = new Map(brandCampaigns.map((c) => [c.id, c.title]));
-
-    // Mock variables that seem to be missing from the read file but required for the incoming block
-    const granularity = 'month';
-    const dateKeys: string[] = []; // This should come from helper
-    const endDate = new Date();
-    const previousEndDate = new Date(); 
 
     for (const key of dateKeys) {
       // Trouver la date de fin de cette période (jour ou mois) pour le cumul des créateurs plateforme
@@ -232,23 +306,23 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       });
     }
 
-    // Agréger les vues par mois et par campagne, et compter les vidéos acceptées
+    // Agréger les vues par période et par campagne
     const campaignViewsMap = new Map<string, Map<number, number>>();
 
     for (const submission of submissionsWithStats) {
       const date = new Date(submission.submittedAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const key = formatDateKey(date, granularity);
       const views = submission.views || 0;
 
-      const monthData = monthlyDataMap.get(monthKey);
-      if (monthData) {
-        monthData.totalViews += views;
-        monthData.acceptedVideosCount += 1; // Compter chaque soumission acceptée
+      const dataPoint = chartDataMap.get(key);
+      if (dataPoint) {
+        dataPoint.totalViews += views;
+        dataPoint.acceptedVideosCount += 1;
 
-        if (!campaignViewsMap.has(monthKey)) {
-          campaignViewsMap.set(monthKey, new Map());
+        if (!campaignViewsMap.has(key)) {
+          campaignViewsMap.set(key, new Map());
         }
-        const campaignViews = campaignViewsMap.get(monthKey)!;
+        const campaignViews = campaignViewsMap.get(key)!;
         campaignViews.set(
           submission.campaignId,
           (campaignViews.get(submission.campaignId) || 0) + views
@@ -256,34 +330,34 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       }
     }
 
-    // Agréger les coûts par mois (factures campagnes)
+    // Agréger les coûts par période (factures campagnes)
     for (const invoice of paidInvoices) {
       if (invoice.paidAt) {
         const date = new Date(invoice.paidAt);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const monthData = monthlyDataMap.get(monthKey);
-        if (monthData) {
-          monthData.totalCost += invoice.amountEur;
+        const key = formatDateKey(date, granularity);
+        const dataPoint = chartDataMap.get(key);
+        if (dataPoint) {
+          dataPoint.totalCost += invoice.amountEur;
         }
       }
     }
 
-    // Agréger les coûts de parrainage par mois
+    // Agréger les coûts de parrainage par période
     for (const refInvoice of paidReferralInvoices) {
       if (refInvoice.paidAt) {
         const date = new Date(refInvoice.paidAt);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const monthData = monthlyDataMap.get(monthKey);
-        if (monthData) {
-          monthData.totalCost += refInvoice.amountEur;
+        const key = formatDateKey(date, granularity);
+        const dataPoint = chartDataMap.get(key);
+        if (dataPoint) {
+          dataPoint.totalCost += refInvoice.amountEur;
         }
       }
     }
 
-    // Construire le breakdown par campagne pour chaque mois
-    for (const [monthKey, campaignViews] of campaignViewsMap) {
-      const monthData = monthlyDataMap.get(monthKey);
-      if (monthData) {
+    // Construire le breakdown par campagne pour chaque période
+    for (const [key, campaignViews] of campaignViewsMap) {
+      const dataPoint = chartDataMap.get(key);
+      if (dataPoint) {
         const breakdown: CampaignMonthlyViews[] = [];
         for (const [campaignId, views] of campaignViews) {
           breakdown.push({
@@ -292,27 +366,25 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
             views,
           });
         }
-        monthData.campaignBreakdown = breakdown.sort((a, b) => b.views - a.views);
+        dataPoint.campaignBreakdown = breakdown.sort((a, b) => b.views - a.views);
       }
     }
 
-    // Calculer les campagnes actives par mois (campagnes créées avant ou pendant le mois et toujours actives)
+    // Calculer les campagnes actives par période
     for (const campaign of brandCampaigns) {
       if (campaign.status === 'active' && campaign.createdAt) {
         const campaignDate = new Date(campaign.createdAt);
-        const campaignMonthKey = `${campaignDate.getFullYear()}-${String(campaignDate.getMonth() + 1).padStart(2, '0')}`;
+        const campaignKey = formatDateKey(campaignDate, granularity);
         
-        // Pour chaque mois à partir de la création de la campagne jusqu'à maintenant
-        for (const [monthKey, monthData] of monthlyDataMap) {
-          if (monthKey >= campaignMonthKey) {
-            monthData.activeCampaignsCount += 1;
+        for (const [key, dataPoint] of chartDataMap) {
+          if (key >= campaignKey) {
+            dataPoint.activeCampaignsCount += 1;
           }
         }
       }
     }
 
-    // Calculer les créateurs uniques par mois (créateurs qui ont soumis des vidéos acceptées)
-    // Récupérer tous les tiktokAccounts en une seule requête
+    // Calculer les créateurs uniques par période
     const tiktokAccountIds = submissionsWithStats.map(s => s.tiktokAccountId).filter((id): id is number => id !== null);
     const tiktokAccountsData = tiktokAccountIds.length > 0 
       ? await db
@@ -323,112 +395,158 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
     
     const tiktokAccountToUserId = new Map(tiktokAccountsData.map(acc => [acc.id, acc.userId]));
     
-    const creatorsByMonth = new Map<string, Set<number>>();
+    const creatorsByPeriod = new Map<string, Set<number>>();
     for (const submission of submissionsWithStats) {
       if (!submission.tiktokAccountId) continue;
       
       const date = new Date(submission.submittedAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const key = formatDateKey(date, granularity);
       
       const userId = tiktokAccountToUserId.get(submission.tiktokAccountId);
       if (userId) {
-        if (!creatorsByMonth.has(monthKey)) {
-          creatorsByMonth.set(monthKey, new Set());
+        if (!creatorsByPeriod.has(key)) {
+          creatorsByPeriod.set(key, new Set());
         }
-        creatorsByMonth.get(monthKey)!.add(userId);
+        creatorsByPeriod.get(key)!.add(userId);
       }
     }
 
-    // Assigner les créateurs par mois
-    for (const [monthKey, creatorSet] of creatorsByMonth) {
-      const monthData = monthlyDataMap.get(monthKey);
-      if (monthData) {
-        monthData.creatorsCount = creatorSet.size;
+    for (const [key, creatorSet] of creatorsByPeriod) {
+      const dataPoint = chartDataMap.get(key);
+      if (dataPoint) {
+        dataPoint.creatorsCount = creatorSet.size;
       }
     }
 
-    // Calculer le CPM moyen par mois (coût pour 1000 vues)
-    for (const [monthKey, monthData] of monthlyDataMap) {
-      if (monthData.totalViews > 0) {
-        // totalCost est en centimes, donc on multiplie par 1000 pour avoir le CPM en centimes
-        monthData.averageCpm = Math.round((monthData.totalCost / monthData.totalViews) * 1000);
+    // Calculer le CPM moyen par période
+    for (const [_, dataPoint] of chartDataMap) {
+      if (dataPoint.totalViews > 0) {
+        dataPoint.averageCpm = Math.round((dataPoint.totalCost / dataPoint.totalViews) * 1000);
       }
     }
 
-    // Calculer les totaux
-    const monthlyData = Array.from(monthlyDataMap.values());
     const chartData = Array.from(chartDataMap.values());
-    const totalViews = monthlyData.reduce((sum, m) => sum + m.totalViews, 0);
-    
-    // Total dépensé = factures campagnes + factures parrainage
-    const campaignSpent = paidInvoices.reduce((sum, i) => sum + i.amountEur, 0);
-    const referralSpent = paidReferralInvoices.reduce((sum, i) => sum + i.amountEur, 0);
-    const totalSpent = campaignSpent + referralSpent;
-    
+
+    // Calculer les totaux sur la période sélectionnée
+    const totalViews = chartData.reduce((sum, d) => sum + d.totalViews, 0);
+    const totalSpent = chartData.reduce((sum, d) => sum + d.totalCost, 0);
     const averageRoi = totalSpent > 0 ? totalViews / (totalSpent / 100) : 0;
-
-    // Compter les vidéos acceptées pour les campagnes de la marque
     const acceptedVideosCount = submissionsWithStats.length;
-
-    // Calculer le CPM moyen (coût pour 1000 vues) en centimes
-    // CPM = (totalSpent / totalViews) * 1000
-    // totalSpent est en centimes, donc on multiplie par 1000 pour avoir le coût pour 1000 vues en centimes
     const averageCpm = totalViews > 0 ? Math.round((totalSpent / totalViews) * 1000) : 0;
 
-    // Calculer les tendances (mois actuel vs mois précédent)
-    const currentMonth = monthlyData[monthlyData.length - 1];
-    const previousMonth = monthlyData[monthlyData.length - 2];
+    // --- Calcul des tendances (comparaison avec la période précédente) ---
+    
+    // Calculer la durée de la période actuelle en millisecondes
+    const periodDuration = endDate.getTime() - startDate.getTime();
+    
+    // Définir la période précédente
+    const previousEndDate = new Date(startDate.getTime() - 1); // Juste avant startDate
+    const previousStartDate = new Date(previousEndDate.getTime() - periodDuration);
 
+    // Récupérer les stats de la période précédente pour les tendances
+    // Vues précédentes
+    const previousSubmissions = await db
+      .select({
+        views: videoStatsCurrent.views,
+        submittedAt: campaignSubmissions.submittedAt,
+      })
+      .from(campaignSubmissions)
+      .leftJoin(videoStatsCurrent, eq(videoStatsCurrent.submissionId, campaignSubmissions.id))
+      .where(
+        and(
+          inArray(campaignSubmissions.campaignId, campaignIds),
+          eq(campaignSubmissions.status, 'accepted'),
+          gte(campaignSubmissions.submittedAt, previousStartDate),
+          lte(campaignSubmissions.submittedAt, previousEndDate)
+        )
+      );
+
+    const previousTotalViews = previousSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
+    const previousAcceptedVideosCount = previousSubmissions.length;
+
+    // Coûts précédents
+    const previousPaidInvoices = await db
+      .select({ amountEur: campaignRewards.amountEur })
+      .from(invoices)
+      .innerJoin(campaignRewards, eq(campaignRewards.id, invoices.rewardId))
+      .where(
+        and(
+          inArray(campaignRewards.campaignId, campaignIds),
+          eq(invoices.status, 'paid'),
+          gte(invoices.paidAt, previousStartDate),
+          lte(invoices.paidAt, previousEndDate)
+        )
+      );
+      
+    const previousPaidReferralInvoices = await db
+      .select({ amountEur: referralInvoices.amountEur })
+      .from(referralInvoices)
+      .where(
+        and(
+          eq(referralInvoices.status, 'paid'),
+          gte(referralInvoices.paidAt, previousStartDate),
+          lte(referralInvoices.paidAt, previousEndDate)
+        )
+      );
+
+    const previousTotalSpent = 
+      previousPaidInvoices.reduce((sum, i) => sum + i.amountEur, 0) +
+      previousPaidReferralInvoices.reduce((sum, i) => sum + i.amountEur, 0);
+
+    // Calcul des pourcentages d'évolution
     let viewsTrend = 0;
+    if (previousTotalViews > 0) {
+      viewsTrend = Math.round(((totalViews - previousTotalViews) / previousTotalViews) * 100);
+    } else if (totalViews > 0) {
+      viewsTrend = 100;
+    }
+
     let spentTrend = 0;
+    if (previousTotalSpent > 0) {
+      spentTrend = Math.round(((totalSpent - previousTotalSpent) / previousTotalSpent) * 100);
+    } else if (totalSpent > 0) {
+      spentTrend = 100;
+    }
+
     let acceptedVideosTrend = 0;
-
-    // Calculer la tendance des vues (même si le mois précédent avait 0 vues)
-    if (previousMonth) {
-      if (previousMonth.totalViews > 0) {
-        viewsTrend = Math.round(
-          ((currentMonth.totalViews - previousMonth.totalViews) / previousMonth.totalViews) * 100
-        );
-      } else if (currentMonth.totalViews > 0) {
-        // Si le mois précédent avait 0 vues mais le mois actuel en a, c'est une augmentation de 100%
-        viewsTrend = 100;
-      }
-    }
-    
-    // Calculer la tendance du budget dépensé (même si le mois précédent avait 0)
-    if (previousMonth) {
-      if (previousMonth.totalCost > 0) {
-        spentTrend = Math.round(
-          ((currentMonth.totalCost - previousMonth.totalCost) / previousMonth.totalCost) * 100
-        );
-      } else if (currentMonth.totalCost > 0) {
-        // Si le mois précédent avait 0 dépensé mais le mois actuel en a, c'est une augmentation de 100%
-        spentTrend = 100;
-      }
+    if (previousAcceptedVideosCount > 0) {
+      acceptedVideosTrend = Math.round(((acceptedVideosCount - previousAcceptedVideosCount) / previousAcceptedVideosCount) * 100);
+    } else if (acceptedVideosCount > 0) {
+      acceptedVideosTrend = 100;
     }
 
-    // Calcul de la tendance des créateurs plateforme
-    // Nombre de créateurs au début de la période précédente
-    const creatorsCountPreviousEnd = allCreators.filter(c => c.createdAt && new Date(c.createdAt) <= previousEndDate).length;
-    const creatorsCountCurrentEnd = allCreators.filter(c => c.createdAt && new Date(c.createdAt) <= endDate).length;
-    
+    // Calcul de la tendance des créateurs (nouveaux inscrits sur la période vs période précédente)
+    const newCreatorsInPeriod = allCreators.filter(c => 
+      c.createdAt && new Date(c.createdAt) >= startDate && new Date(c.createdAt) <= endDate
+    ).length;
+
+    const newCreatorsInPreviousPeriod = allCreators.filter(c => 
+      c.createdAt && new Date(c.createdAt) >= previousStartDate && new Date(c.createdAt) <= previousEndDate
+    ).length;
+
     let platformCreatorsTrend = 0;
-    if (creatorsCountPreviousEnd > 0) {
-      platformCreatorsTrend = Math.round(((creatorsCountCurrentEnd - creatorsCountPreviousEnd) / creatorsCountPreviousEnd) * 100);
-    } else if (creatorsCountCurrentEnd > 0) {
+    if (newCreatorsInPreviousPeriod > 0) {
+      platformCreatorsTrend = Math.round(((newCreatorsInPeriod - newCreatorsInPreviousPeriod) / newCreatorsInPreviousPeriod) * 100);
+    } else if (newCreatorsInPeriod > 0) {
       platformCreatorsTrend = 100;
     }
 
     // Pour la rétrocompatibilité, on remplit monthlyData si la granularité est 'month'
     // Sinon on laisse vide ou on adapte (ici on laisse vide si c'est pas 'month' pour simplifier, 
     // le front utilisera chartData de toute façon)
-    // let monthlyData: BrandMonthlyData[] = []; // Already defined above
+    let monthlyData: BrandMonthlyData[] = [];
     if (granularity === 'month') {
-      // Re-map monthlyData from chartData? Or keep as is?
-      // The incoming code re-maps it.
-      // monthlyData = chartData.map(d => ({ ... }));
+      monthlyData = chartData.map(d => ({
+        month: d.date,
+        totalViews: d.totalViews,
+        totalCost: d.totalCost,
+        acceptedVideosCount: d.acceptedVideosCount,
+        activeCampaignsCount: d.activeCampaignsCount,
+        creatorsCount: d.creatorsCount,
+        averageCpm: d.averageCpm,
+        campaignBreakdown: d.campaignBreakdown
+      }));
     }
-
     // Calculer le nombre total de créateurs actifs sur la période
     const activeCreatorsSet = new Set<number>();
     for (const submission of submissionsWithStats) {
@@ -442,7 +560,7 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
     const activeCreatorsCount = activeCreatorsSet.size;
 
     const stats: BrandDashboardStats = {
-      monthlyData,
+      monthlyData, // Rempli seulement si granularité mois, sinon vide (mais chartData est là)
       chartData,
       totalViews,
       totalSpent,
@@ -473,11 +591,3 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
     res.status(500).json({ error: (error as Error).message, code: 'INTERNAL_SERVER_ERROR' });
   }
 };
-
-// Helper functions (mocked/inferred)
-function generateDateKeys(start: string, end: string, granularity: string): string[] {
-    return [];
-}
-function formatLabel(date: string, granularity: string): string {
-    return date;
-}
