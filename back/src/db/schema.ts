@@ -84,6 +84,8 @@ export const users = pgTable('users', {
   referralCode: varchar('referral_code', { length: 6 }).unique(),
   referralPercentage: integer('referral_percentage').notNull().default(10),
   referredById: integer('referred_by_id'),
+  // AppsFlyer
+  appsflyerLink: text('appsflyer_link'),
   // TikTok multi-app support
   new_20: boolean('new_20').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),

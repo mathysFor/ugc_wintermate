@@ -36,6 +36,13 @@
       "when": 1768308365908,
       "tag": "0004_faithful_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769254717244,
+      "tag": "0005_same_chameleon",
+      "breakpoints": true
     }
   ]
 }
