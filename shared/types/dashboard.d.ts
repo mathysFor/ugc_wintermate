@@ -13,14 +13,15 @@ export interface BrandStatsQuery {
 }
 
 export type ChartDataPoint = {
-  date: string; // YYYY-MM-DD or YYYY-MM
-  label: string; // Formatted label for display
+  date: string;
+  label: string;
   totalViews: number;
   totalCost: number;
   acceptedVideosCount: number;
   activeCampaignsCount: number;
   creatorsCount: number;
   platformCreatorsCount?: number;
+  winterMateUsersCount?: number;
   averageCpm: number;
   campaignBreakdown: CampaignMonthlyViews[];
 };
@@ -32,12 +33,13 @@ export type BrandMonthlyData = {
   acceptedVideosCount: number;
   activeCampaignsCount: number;
   creatorsCount: number;
+  winterMateUsersCount?: number;
   averageCpm: number;
   campaignBreakdown: CampaignMonthlyViews[];
 };
 
 export type BrandDashboardStats = {
-  monthlyData: BrandMonthlyData[]; // Deprecated, use chartData
+  monthlyData: BrandMonthlyData[];
   chartData: ChartDataPoint[];
   totalViews: number;
   totalSpent: number;
@@ -52,6 +54,10 @@ export type BrandDashboardStats = {
   averageCpm: number;
   acceptedVideosTrend: number;
   creatorsTrend: number;
+  winterMateUsers?: {
+    count: number;
+    trend: number;
+  };
 };
 
 export type BrandDashboardStatsResponse = BrandDashboardStats;

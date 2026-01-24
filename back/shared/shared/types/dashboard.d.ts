@@ -4,14 +4,6 @@ export type CampaignMonthlyViews = {
   views: number;
 };
 
-export type DashboardPeriod = 'today' | '7d' | '14d' | '30d' | '12m' | 'custom';
-
-export interface BrandStatsQuery {
-  period?: DashboardPeriod;
-  startDate?: string; // YYYY-MM-DD
-  endDate?: string; // YYYY-MM-DD
-}
-
 export type ChartDataPoint = {
   date: string;
   label: string;
@@ -48,8 +40,6 @@ export type BrandDashboardStats = {
   viewsTrend: number;
   spentTrend: number;
   creatorsCount: number;
-  activeCreatorsCount: number;
-  platformCreatorsTrend?: number;
   acceptedVideosCount: number;
   averageCpm: number;
   acceptedVideosTrend: number;
@@ -112,7 +102,6 @@ export type CreatorDashboardStatsResponse = {
     campaignTitle?: string;
     submittedAt?: string;
     tiktokVideoId?: string;
-    tiktokAccountId?: number;
   }>;
   topVideosByEarnings?: Array<{
     videoId: string;
@@ -123,7 +112,6 @@ export type CreatorDashboardStatsResponse = {
     submissionId?: number;
     campaignTitle?: string;
     tiktokVideoId?: string;
-    tiktokAccountId?: number;
   }>;
   submissionsByMonth: Array<{
     month: string;
@@ -146,8 +134,6 @@ export type CreatorDashboardStatsResponse = {
     views: number;
     likes: number;
     coverImageUrl: string;
-    submissionId?: number;
-    campaignTitle?: string;
   }>;
   connectedTiktokAccounts: Array<{
     id: number;
@@ -155,3 +141,4 @@ export type CreatorDashboardStatsResponse = {
     isValid: boolean;
   }>;
 };
+

@@ -35,6 +35,7 @@ import {
   Calendar,
   ToggleLeft,
   ToggleRight,
+  Smartphone,
 } from 'lucide-react';
 import type { DashboardPeriod } from '@shared/types/dashboard';
 
@@ -81,7 +82,7 @@ export const BrandDashboardPage = () => {
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | 'all'>('all');
   const [showCampaignDropdown, setShowCampaignDropdown] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<'views' | 'spent' | 'acceptedVideos' | 'activeCampaigns' | 'creators' | 'cpm'>('views');
+  const [selectedMetric, setSelectedMetric] = useState<'views' | 'spent' | 'acceptedVideos' | 'activeCampaigns' | 'creators' | 'winterMateUsers' | 'cpm'>('views');
 
   // Filter campaigns
   const myCampaigns = campaigns?.items.filter((c) => c.brand.userId === user?.id) || [];
@@ -154,6 +155,8 @@ export const BrandDashboardPage = () => {
           // Pour l'instant, on suppose que le backend renvoie platformCreatorsCount.
           chartPoint.creators = 'platformCreatorsCount' in point ? (point.platformCreatorsCount || 0) : point.creatorsCount;
         }
+      } else if (selectedMetric === 'winterMateUsers') {
+        chartPoint.winterMateUsers = 'winterMateUsersCount' in point ? (point.winterMateUsersCount || 0) : 0;
       } else if (selectedMetric === 'cpm') {
         chartPoint.cpm = point.averageCpm / 100; // Convertir centimes en euros
       }
@@ -174,6 +177,7 @@ export const BrandDashboardPage = () => {
       acceptedVideos: { dataKey: 'acceptedVideos', name: 'Vidéos acceptées', color: '#a78bfa', gradient: 'url(#gradientVideos)' },
       activeCampaigns: { dataKey: 'activeCampaigns', name: 'Campagnes actives', color: '#f472b6', gradient: 'url(#gradientCampaigns)' },
       creators: { dataKey: 'creators', name: showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
+      winterMateUsers: { dataKey: 'winterMateUsers', name: 'Utilisateurs WinterMate', color: '#8b5cf6', gradient: 'url(#gradientWinterMate)' },
       cpm: { dataKey: 'cpm', name: 'CPM moyen', color: '#fb923c', gradient: 'url(#gradientCpm)' },
     };
     
@@ -197,6 +201,8 @@ export const BrandDashboardPage = () => {
       return chartData.some((d) => Number(d.activeCampaigns || 0) > 0);
     } else if (selectedMetric === 'creators') {
       return chartData.some((d) => Number(d.creators || 0) > 0);
+    } else if (selectedMetric === 'winterMateUsers') {
+      return chartData.some((d) => Number(d.winterMateUsers || 0) > 0);
     } else if (selectedMetric === 'cpm') {
       return chartData.some((d) => Number(d.cpm || 0) > 0);
     }
@@ -457,6 +463,47 @@ export const BrandDashboardPage = () => {
           </CardContent>
         </Card>
 
+        {/* WinterMate Users - prend 25% (1 colonne) */}
+        <Card 
+          className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-1 cursor-pointer ${
+            selectedMetric === 'winterMateUsers' ? 'ring-2 ring-violet-500 bg-violet-50/50' : ''
+          }`}
+          onClick={() => setSelectedMetric('winterMateUsers')}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          <CardContent className="p-3 sm:p-4 md:p-6 relative">
+            <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
+              <p className="text-xs sm:text-sm font-medium text-slate-500">Utilisateurs WinterMate</p>
+              <div className="p-1.5 sm:p-2 bg-violet-100 text-violet-600 rounded-lg group-hover:scale-110 transition-transform">
+                <Smartphone size={16} className="sm:w-5 sm:h-5" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 sm:gap-2">
+              {loadingStats ? (
+                <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
+              ) : (
+                <>
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+                      {dashboardStats?.winterMateUsers?.count || 0}
+                    </p>
+                    {dashboardStats?.winterMateUsers?.trend !== undefined && (
+                      <Badge
+                        variant={dashboardStats.winterMateUsers.trend >= 0 ? 'success' : 'destructive'}
+                        className="text-[10px] sm:text-xs"
+                      >
+                        {dashboardStats.winterMateUsers.trend >= 0 ? '+' : ''}
+                        {dashboardStats.winterMateUsers.trend}%
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">sur l'application</p>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Vidéos acceptées - prend 25% (1 colonne) */}
         <Card 
           className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-1 cursor-pointer ${
@@ -542,6 +589,7 @@ export const BrandDashboardPage = () => {
                 {selectedMetric === 'acceptedVideos' && <CheckCircle className="w-5 h-5" style={{ color: chartConfig.color }} />}
                 {selectedMetric === 'activeCampaigns' && <Rocket className="w-5 h-5" style={{ color: chartConfig.color }} />}
                 {selectedMetric === 'creators' && <Users className="w-5 h-5" style={{ color: chartConfig.color }} />}
+                {selectedMetric === 'winterMateUsers' && <Smartphone className="w-5 h-5" style={{ color: chartConfig.color }} />}
                 {selectedMetric === 'cpm' && <TrendingUp className="w-5 h-5" style={{ color: chartConfig.color }} />}
               </div>
               <div>
@@ -551,6 +599,7 @@ export const BrandDashboardPage = () => {
                   {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
                   {selectedMetric === 'activeCampaigns' && 'Campagnes actives'}
                   {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits')}
+                  {selectedMetric === 'winterMateUsers' && 'Utilisateurs WinterMate'}
                   {selectedMetric === 'cpm' && 'CPM moyen'}
                 </CardTitle>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -559,6 +608,7 @@ export const BrandDashboardPage = () => {
                   {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
                   {selectedMetric === 'activeCampaigns' && 'Campagnes en cours'}
                   {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs participant à vos campagnes' : 'Évolution du nombre de créateurs sur la plateforme')}
+                  {selectedMetric === 'winterMateUsers' && 'Évolution des utilisateurs de l\'application'}
                   {selectedMetric === 'cpm' && 'Coût pour 1000 vues'}
                 </p>
               </div>
@@ -576,6 +626,7 @@ export const BrandDashboardPage = () => {
                     ? (dashboardStats?.creatorsCount || 0) 
                     : (dashboardStats?.chartData?.[dashboardStats.chartData.length - 1]?.platformCreatorsCount || 0)
                 )}
+                {selectedMetric === 'winterMateUsers' && (dashboardStats?.winterMateUsers?.count || 0)}
                 {selectedMetric === 'cpm' && `${((dashboardStats?.averageCpm || 0) / 100).toFixed(2)}€`}
               </p>
               <p className="text-xs text-slate-500 uppercase tracking-wider">Total</p>
@@ -666,6 +717,10 @@ export const BrandDashboardPage = () => {
                       <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.3} />
                       <stop offset="100%" stopColor="#fbbf24" stopOpacity={0} />
                     </linearGradient>
+                    <linearGradient id="gradientWinterMate" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
                     <linearGradient id="gradientCpm" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#fb923c" stopOpacity={0.3} />
                       <stop offset="100%" stopColor="#fb923c" stopOpacity={0} />
@@ -691,7 +746,7 @@ export const BrandDashboardPage = () => {
                     tickFormatter={(value: number) => {
                       if (selectedMetric === 'spent' || selectedMetric === 'cpm') {
                         return `${value.toFixed(selectedMetric === 'cpm' ? 1 : 0)}€`;
-                      } else if (selectedMetric === 'acceptedVideos' || selectedMetric === 'activeCampaigns' || selectedMetric === 'creators') {
+                      } else if (selectedMetric === 'acceptedVideos' || selectedMetric === 'activeCampaigns' || selectedMetric === 'creators' || selectedMetric === 'winterMateUsers') {
                         return value.toString();
                       }
                       return formatNumber(value);
@@ -711,7 +766,7 @@ export const BrandDashboardPage = () => {
                       if (value === undefined || typeof value !== 'number') return ['', ''];
                       if (selectedMetric === 'spent' || selectedMetric === 'cpm') {
                         return [`${value.toFixed(selectedMetric === 'cpm' ? 2 : 0)}€`, chartConfig.name];
-                      } else if (selectedMetric === 'acceptedVideos' || selectedMetric === 'activeCampaigns' || selectedMetric === 'creators') {
+                      } else if (selectedMetric === 'acceptedVideos' || selectedMetric === 'activeCampaigns' || selectedMetric === 'creators' || selectedMetric === 'winterMateUsers') {
                         return [value.toString(), chartConfig.name];
                       }
                       return [formatNumber(value), chartConfig.name];
