@@ -64,6 +64,7 @@ export const ProfilePage = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [appsflyerCopied, setAppsflyerCopied] = useState(false);
 
   // Mutations pour la marque
   const { mutateAsync: updateBrand, isPending: isUpdating } = useUpdateBrand(brand?.id ?? 0, {
@@ -159,6 +160,14 @@ export const ProfilePage = () => {
     }
     setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleCopyAppsflyerLink = () => {
+    if (user?.appsflyerLink) {
+      navigator.clipboard.writeText(user.appsflyerLink);
+      setAppsflyerCopied(true);
+      setTimeout(() => setAppsflyerCopied(false), 2000);
+    }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,6 +292,44 @@ export const ProfilePage = () => {
                 >
                   <span className="font-bold mr-2">TikTok</span> Connecter un compte
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AppsFlyer Link (Creators Only) */}
+          {user?.isCreator && user?.appsflyerLink && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Share2 className="text-[#ED5D3B]" size={20} />
+                  Lien d'affiliation App
+                </CardTitle>
+                <CardDescription>
+                  Partagez ce lien pour inviter d'autres créateurs via l'application.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                 <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <code className="flex-1 text-sm text-slate-600 truncate font-mono">
+                      {user.appsflyerLink}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={appsflyerCopied ? "text-green-600" : "text-slate-500 hover:text-slate-900"}
+                      onClick={handleCopyAppsflyerLink}
+                    >
+                      {appsflyerCopied ? (
+                        <span className="flex items-center gap-1">
+                          Copié !
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          Copier
+                        </span>
+                      )}
+                    </Button>
+                  </div>
               </CardContent>
             </Card>
           )}

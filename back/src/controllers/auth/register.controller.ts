@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import type { CreateAccountInput, CreateAccountResponse, AuthUser } from '@shared/types/auth';
 import { customerIoService } from '../../services/customer-io.service';
 import { notificationService } from '../../services/notifications.service';
+import { appsflyerService } from '../../services/appsflyer.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
@@ -78,6 +79,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Générer un code de parrainage unique pour le nouvel utilisateur
     const newReferralCode = await generateReferralCode();
 
+    // Générer le lien AppsFlyer si c'est un créateur
+    let appsflyerLink: string | null = null;
+    if (req.body.isCreator !== false) { // Par défaut isCreator est true si non spécifié ou true
+       appsflyerLink = await appsflyerService.generateOneLink(newReferralCode);
+    }
+
     const [created] = await db
       .insert(users)
       .values({
@@ -91,6 +98,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         referralCode: newReferralCode,
         referredById: referrerId,
         new_20: true,
+        appsflyerLink,
       })
       .returning();
 
@@ -107,6 +115,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       referredById: created.referredById ?? null,
       new_20: created.new_20,
       createdAt: created.createdAt.toISOString(),
+      appsflyerLink: created.appsflyerLink ?? null,
     };
 
     // Identifier le créateur dans Customer.io (fire and forget)
