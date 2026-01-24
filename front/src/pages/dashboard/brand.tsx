@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { CampaignActions } from '@/components/campaign-actions';
 import {
   Plus,
@@ -30,7 +32,11 @@ import {
   ChevronDown,
   Users,
   CheckCircle,
+  Calendar,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
+import type { DashboardPeriod } from '@shared/types/dashboard';
 
 // Couleurs vibrantes pour les campagnes
 const CAMPAIGN_COLORS = [
@@ -52,19 +58,26 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
-const formatMonth = (monthStr: string): string => {
-  const [year, month] = monthStr.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1);
-  return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
-};
-
-
-
 export const BrandDashboardPage = () => {
   const user = useAuthStore((s) => s.user);
+  
+  // États pour le filtrage par date
+  const [period, setPeriod] = useState<DashboardPeriod>('12m');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [showActiveCreatorsOnly, setShowActiveCreatorsOnly] = useState(false);
+
   const { data: brand, isLoading: loadingBrand } = useGetMyBrand();
   const { data: campaigns, isLoading: loadingCampaigns } = useGetAllCampaigns({ status: 'all' });
-  const { data: dashboardStats, isLoading: loadingStats } = useGetBrandDashboardStats();
+  
+  // Appel API avec les paramètres de filtrage
+  const { data: dashboardStats, isLoading: loadingStats } = useGetBrandDashboardStats({
+    period,
+    startDate: period === 'custom' ? startDate : undefined,
+    endDate: period === 'custom' ? endDate : undefined,
+  });
+
+  console.log('[BrandDashboard] Period:', period, 'Stats:', dashboardStats?.chartData?.length);
 
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | 'all'>('all');
   const [showCampaignDropdown, setShowCampaignDropdown] = useState(false);
@@ -75,10 +88,13 @@ export const BrandDashboardPage = () => {
 
   // Get unique campaigns for legend (MUST be before chartData)
   const uniqueCampaigns = useMemo(() => {
-    if (!dashboardStats?.monthlyData) return [];
+    // Utiliser chartData s'il est disponible, sinon fallback sur monthlyData (pour compatibilité)
+    const data = dashboardStats?.chartData || dashboardStats?.monthlyData;
+    if (!data) return [];
+    
     const campaignMap = new Map<number, string>();
-    dashboardStats.monthlyData.forEach((month) => {
-      month.campaignBreakdown.forEach((cb) => {
+    data.forEach((point) => {
+      point.campaignBreakdown.forEach((cb) => {
         campaignMap.set(cb.campaignId, cb.campaignTitle);
       });
     });
@@ -91,47 +107,60 @@ export const BrandDashboardPage = () => {
 
   // Prepare chart data - ensure all campaign keys exist in every data point
   const chartData = useMemo(() => {
-    if (!dashboardStats?.monthlyData) return [];
+    // Utiliser chartData s'il est disponible, sinon fallback sur monthlyData
+    const data = dashboardStats?.chartData || dashboardStats?.monthlyData;
+    if (!data) return [];
 
-    return dashboardStats.monthlyData.map((month) => {
-      const data: Record<string, number | string> = {
-        month: formatMonth(month.month),
+    return data.map((point) => {
+      // Si c'est chartData, on a 'label', sinon on formate 'month'
+      const label = 'label' in point ? point.label : point.month;
+      
+      const chartPoint: Record<string, number | string> = {
+        name: label, // Utilisé pour l'axe X
+        date: 'date' in point ? point.date : point.month, // Pour référence si besoin
       };
 
       // Selon la métrique sélectionnée, ajouter les bonnes données
       if (selectedMetric === 'views') {
-        data.totalViews = month.totalViews;
+        chartPoint.totalViews = point.totalViews;
         // Add breakdown per campaign if 'all' selected
         if (selectedCampaignId === 'all') {
           // Initialize ALL campaigns to 0 first (fix for missing keys)
           uniqueCampaigns.forEach((c) => {
-            data[`campaign_${c.id}`] = 0;
+            chartPoint[`campaign_${c.id}`] = 0;
           });
           // Then fill with actual values
-          month.campaignBreakdown.forEach((cb) => {
-            data[`campaign_${cb.campaignId}`] = cb.views;
+          point.campaignBreakdown.forEach((cb) => {
+            chartPoint[`campaign_${cb.campaignId}`] = cb.views;
           });
         } else {
-          const campaignData = month.campaignBreakdown.find(
+          const campaignData = point.campaignBreakdown.find(
             (cb) => cb.campaignId === selectedCampaignId
           );
-          data.views = campaignData?.views || 0;
+          chartPoint.views = campaignData?.views || 0;
         }
       } else if (selectedMetric === 'spent') {
-        data.totalSpent = month.totalCost / 100; // Convertir centimes en euros
+        chartPoint.totalSpent = point.totalCost / 100; // Convertir centimes en euros
       } else if (selectedMetric === 'acceptedVideos') {
-        data.acceptedVideos = month.acceptedVideosCount;
+        chartPoint.acceptedVideos = point.acceptedVideosCount;
       } else if (selectedMetric === 'activeCampaigns') {
-        data.activeCampaigns = month.activeCampaignsCount;
+        chartPoint.activeCampaigns = point.activeCampaignsCount;
       } else if (selectedMetric === 'creators') {
-        data.creators = month.creatorsCount;
+        if (showActiveCreatorsOnly) {
+          chartPoint.creators = point.creatorsCount;
+        } else {
+          // Utiliser platformCreatorsCount s'il existe (nouveau backend), sinon fallback sur creatorsCount (ancien comportement)
+          // Mais attention, creatorsCount = actifs. Donc si platformCreatorsCount n'existe pas, on affiche 0 ou on garde l'ancien comportement ?
+          // Pour l'instant, on suppose que le backend renvoie platformCreatorsCount.
+          chartPoint.creators = 'platformCreatorsCount' in point ? (point.platformCreatorsCount || 0) : point.creatorsCount;
+        }
       } else if (selectedMetric === 'cpm') {
-        data.cpm = month.averageCpm / 100; // Convertir centimes en euros
+        chartPoint.cpm = point.averageCpm / 100; // Convertir centimes en euros
       }
 
-      return data;
+      return chartPoint;
     });
-  }, [dashboardStats, selectedCampaignId, uniqueCampaigns, selectedMetric]);
+  }, [dashboardStats, selectedCampaignId, uniqueCampaigns, selectedMetric, showActiveCreatorsOnly]);
 
   const selectedCampaignName = selectedCampaignId === 'all'
     ? 'Toutes les campagnes'
@@ -144,7 +173,7 @@ export const BrandDashboardPage = () => {
       spent: { dataKey: 'totalSpent', name: 'Budget dépensé', color: '#4ade80', gradient: 'url(#gradientSpent)' },
       acceptedVideos: { dataKey: 'acceptedVideos', name: 'Vidéos acceptées', color: '#a78bfa', gradient: 'url(#gradientVideos)' },
       activeCampaigns: { dataKey: 'activeCampaigns', name: 'Campagnes actives', color: '#f472b6', gradient: 'url(#gradientCampaigns)' },
-      creators: { dataKey: 'creators', name: 'Créateurs', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
+      creators: { dataKey: 'creators', name: showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
       cpm: { dataKey: 'cpm', name: 'CPM moyen', color: '#fb923c', gradient: 'url(#gradientCpm)' },
     };
     
@@ -154,10 +183,8 @@ export const BrandDashboardPage = () => {
     }
     
     return configs[selectedMetric] || configs.views;
-  }, [selectedMetric, selectedCampaignId]);
+  }, [selectedMetric, selectedCampaignId, showActiveCreatorsOnly]);
 
-  // Détermine les Bars à afficher selon la métrique sélectionnée (pour le mode multi-campagnes)
- 
   // Check if we have data to display
   const hasData = useMemo(() => {
     if (selectedMetric === 'views') {
@@ -217,6 +244,46 @@ export const BrandDashboardPage = () => {
         </Card>
       )}
 
+      {/* Filtres de période */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+        <Tabs value={period} onValueChange={(v) => setPeriod(v as DashboardPeriod)} className="w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:flex sm:flex-row h-auto gap-1 bg-slate-100/50 p-1">
+            <TabsTrigger value="today" className="text-xs sm:text-sm">Aujourd'hui</TabsTrigger>
+            <TabsTrigger value="7d" className="text-xs sm:text-sm">7 jours</TabsTrigger>
+            <TabsTrigger value="14d" className="text-xs sm:text-sm">14 jours</TabsTrigger>
+            <TabsTrigger value="30d" className="text-xs sm:text-sm">30 jours</TabsTrigger>
+            <TabsTrigger value="12m" className="text-xs sm:text-sm">12 mois</TabsTrigger>
+            <TabsTrigger value="custom" className="text-xs sm:text-sm">Perso</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {period === 'custom' && (
+          <div className="flex items-center gap-2 w-full sm:w-auto animate-in fade-in slide-in-from-left-2 duration-200">
+            <div className="relative flex-1 sm:flex-none">
+              <Calendar className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="pl-9 h-9 text-xs sm:text-sm w-full sm:w-auto"
+                placeholder="Début"
+              />
+            </div>
+            <span className="text-slate-400">-</span>
+            <div className="relative flex-1 sm:flex-none">
+              <Calendar className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="pl-9 h-9 text-xs sm:text-sm w-full sm:w-auto"
+                placeholder="Fin"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* KPIs Grid - 6 cartes avec layout personnalisé */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {/* Vues totales - prend 50% (2 colonnes) */}
@@ -253,7 +320,7 @@ export const BrandDashboardPage = () => {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">vs mois précédent</p>
+                  <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">vs période précédente</p>
                 </>
               )}
             </div>
@@ -339,21 +406,54 @@ export const BrandDashboardPage = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-sky-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           <CardContent className="p-3 sm:p-4 md:p-6 relative">
             <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-              <p className="text-xs sm:text-sm font-medium text-slate-500">Créateurs</p>
-              <div className="p-1.5 sm:p-2 bg-sky-100 text-sky-600 rounded-lg group-hover:scale-110 transition-transform">
-                <Users size={16} className="sm:w-5 sm:h-5" />
+              <p className="text-xs sm:text-sm font-medium text-slate-500">
+                {showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs'}
+              </p>
+              <div className="flex items-center gap-2">
+                {/* Toggle Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowActiveCreatorsOnly(!showActiveCreatorsOnly);
+                  }}
+                  className="text-slate-400 hover:text-sky-600 transition-colors transform hover:scale-110"
+                  title={showActiveCreatorsOnly ? "Voir tous les créateurs" : "Voir mes créateurs actifs"}
+                >
+                  {showActiveCreatorsOnly ? <ToggleRight size={32} className="text-sky-500" /> : <ToggleLeft size={32} />}
+                </button>
+                <div className="p-1.5 sm:p-2 bg-sky-100 text-sky-600 rounded-lg group-hover:scale-110 transition-transform">
+                  <Users size={16} className="sm:w-5 sm:h-5" />
+                </div>
               </div>
             </div>
-            <div className="flex items-baseline gap-1 sm:gap-2">
+            <div className="flex flex-col gap-1 sm:gap-2">
               {loadingStats ? (
                 <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
               ) : (
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
-                  {dashboardStats?.creatorsCount || 0}
-                </p>
+                <>
+                  <div className="flex items-baseline gap-1 sm:gap-2">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">
+                      {showActiveCreatorsOnly 
+                        ? (dashboardStats?.activeCreatorsCount || 0) 
+                        : (dashboardStats?.creatorsCount || 0)
+                      }
+                    </p>
+                    {!showActiveCreatorsOnly && dashboardStats?.platformCreatorsTrend !== undefined && (
+                      <Badge
+                        variant={dashboardStats.platformCreatorsTrend >= 0 ? 'success' : 'destructive'}
+                        className="text-[10px] sm:text-xs"
+                      >
+                        {dashboardStats.platformCreatorsTrend >= 0 ? '+' : ''}
+                        {dashboardStats.platformCreatorsTrend}%
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">
+                    {showActiveCreatorsOnly ? 'actifs sur vos campagnes' : 'inscrits sur la plateforme'}
+                  </p>
+                </>
               )}
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">sur la plateforme</p>
           </CardContent>
         </Card>
 
@@ -446,19 +546,19 @@ export const BrandDashboardPage = () => {
               </div>
               <div>
                 <CardTitle className="text-base sm:text-lg font-semibold text-slate-900">
-                  {selectedMetric === 'views' && 'Vues par mois'}
-                  {selectedMetric === 'spent' && 'Budget dépensé par mois'}
-                  {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées par mois'}
-                  {selectedMetric === 'activeCampaigns' && 'Campagnes actives par mois'}
-                  {selectedMetric === 'creators' && 'Créateurs par mois'}
-                  {selectedMetric === 'cpm' && 'CPM moyen par mois'}
+                  {selectedMetric === 'views' && 'Vues'}
+                  {selectedMetric === 'spent' && 'Budget dépensé'}
+                  {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
+                  {selectedMetric === 'activeCampaigns' && 'Campagnes actives'}
+                  {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits')}
+                  {selectedMetric === 'cpm' && 'CPM moyen'}
                 </CardTitle>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  {selectedMetric === 'views' && 'Performance sur les 12 derniers mois'}
+                  {selectedMetric === 'views' && 'Performance sur la période'}
                   {selectedMetric === 'spent' && 'Évolution des dépenses'}
                   {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
                   {selectedMetric === 'activeCampaigns' && 'Campagnes en cours'}
-                  {selectedMetric === 'creators' && 'Créateurs participants'}
+                  {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs participant à vos campagnes' : 'Évolution du nombre de créateurs sur la plateforme')}
                   {selectedMetric === 'cpm' && 'Coût pour 1000 vues'}
                 </p>
               </div>
@@ -471,7 +571,11 @@ export const BrandDashboardPage = () => {
                 {selectedMetric === 'spent' && `${((dashboardStats?.totalSpent || 0) / 100).toFixed(0)}€`}
                 {selectedMetric === 'acceptedVideos' && (dashboardStats?.acceptedVideosCount || 0)}
                 {selectedMetric === 'activeCampaigns' && (dashboardStats?.activeCampaigns || 0)}
-                {selectedMetric === 'creators' && (dashboardStats?.creatorsCount || 0)}
+                {selectedMetric === 'creators' && (
+                  showActiveCreatorsOnly 
+                    ? (dashboardStats?.creatorsCount || 0) 
+                    : (dashboardStats?.chartData?.[dashboardStats.chartData.length - 1]?.platformCreatorsCount || 0)
+                )}
                 {selectedMetric === 'cpm' && `${((dashboardStats?.averageCpm || 0) / 100).toFixed(2)}€`}
               </p>
               <p className="text-xs text-slate-500 uppercase tracking-wider">Total</p>
@@ -573,11 +677,12 @@ export const BrandDashboardPage = () => {
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="month"
+                    dataKey="name"
                     tick={{ fill: '#64748b', fontSize: 11 }}
                     tickLine={false}
                     axisLine={{ stroke: '#e2e8f0' }}
                     dy={8}
+                    interval="preserveStartEnd"
                   />
                   <YAxis
                     tick={{ fill: '#64748b', fontSize: 11 }}
