@@ -154,6 +154,11 @@ Dockerfile.dev
 *.key
 *.crt
 
+# Firebase service account (contains secrets)
+service_account.json
+service_accunt.json
+*-firebase-adminsdk-*.json
+
 # Drizzle generated files
 drizzle/meta/
 migrations/

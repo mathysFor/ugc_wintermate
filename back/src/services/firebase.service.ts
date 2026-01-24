@@ -2,17 +2,51 @@ import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 
 let isInitialized = false;
+let initializationFailed = false;
 
-export const initializeFirebase = () => {
-  if (isInitialized) return;
+export const initializeFirebase = (): boolean => {
+  if (isInitialized) return true;
+  if (initializationFailed) return false;
 
+  // Option 1: Utiliser le JSON complet du service account (recommandé)
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  
+  if (serviceAccountJson) {
+    try {
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      isInitialized = true;
+      console.log('[Firebase] Admin initialized successfully with service account JSON.');
+      return true;
+    } catch (error) {
+      console.error('[Firebase] Error parsing FIREBASE_SERVICE_ACCOUNT JSON:', error);
+      initializationFailed = true;
+      return false;
+    }
+  }
+
+  // Option 2: Utiliser les variables séparées (fallback)
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
-    console.warn('Firebase credentials not found in environment variables. WinterMate stats will be unavailable.');
-    return;
+    console.warn('[Firebase] Credentials not found. Set FIREBASE_SERVICE_ACCOUNT or individual FIREBASE_* variables.');
+    console.warn('[Firebase] WinterMate stats will be unavailable.');
+    initializationFailed = true;
+    return false;
+  }
+
+  // Gérer différents formats d'échappement de la clé privée
+  privateKey = privateKey
+    .replace(/\\n/g, '\n')
+    .replace(/\\\\n/g, '\n');
+  
+  // Enlever les guillemets si présents
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.slice(1, -1).replace(/\\n/g, '\n');
   }
 
   try {
@@ -24,17 +58,20 @@ export const initializeFirebase = () => {
       }),
     });
     isInitialized = true;
-    console.log('Firebase Admin initialized successfully.');
+    console.log('[Firebase] Admin initialized successfully with individual variables.');
+    return true;
   } catch (error) {
-    console.error('Error initializing Firebase Admin:', error);
+    console.error('[Firebase] Error initializing Firebase Admin:', error);
+    initializationFailed = true;
+    return false;
   }
 };
 
 export const getWinterMateStats = async (startDate: Date, endDate: Date, previousStartDate: Date, previousEndDate: Date) => {
   if (!isInitialized) {
-    initializeFirebase();
-    if (!isInitialized) {
-      return { count: 0, trend: 0, chartData: [] };
+    const success = initializeFirebase();
+    if (!success) {
+      return { count: 0, trend: 0, creationDates: [] };
     }
   }
 
