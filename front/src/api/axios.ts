@@ -5,7 +5,17 @@ import { useAuthStore } from '@/stores/auth';
 // En dev local, utiliser le proxy /api-local vers localhost:3000
 export const BASE_URL = import.meta.env.PROD
   ? "https://back-production-b3c5.up.railway.app"
-  : "/api-prod";
+  : "/api-local";
+
+// Log pour vérifier le mode et l'URL utilisée
+if (import.meta.env.DEV) {
+  console.log('🔧 [API] Mode DÉVELOPPEMENT LOCAL');
+  console.log('🔧 [API] BASE_URL:', BASE_URL);
+  console.log('🔧 [API] Les requêtes seront proxyfiées vers http://localhost:3000');
+} else {
+  console.log('🚀 [API] Mode PRODUCTION');
+  console.log('🚀 [API] BASE_URL:', BASE_URL);
+}
 
 const axiosInstance = axios.create({ baseURL: BASE_URL });
 

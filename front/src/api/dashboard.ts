@@ -1,4 +1,5 @@
 import { useFetcher } from "@/api/api";
+import { keepPreviousData } from "@tanstack/react-query";
 import type {
   BrandDashboardStatsResponse,
   CreatorDashboardStatsResponse,
@@ -13,7 +14,12 @@ export const useGetBrandDashboardStats = (params?: BrandStatsQuery, options = {}
     key: ["dashboard", "brand", "stats", params],
     path: "/api/dashboard/brand/stats",
     params,
-    options,
+    options: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - Les stats dashboard peuvent rester fraîches 5 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes - Garder en cache 30 minutes
+      placeholderData: keepPreviousData, // Afficher les données précédentes pendant le chargement
+      ...options,
+    },
   });
 
 /**

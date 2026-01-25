@@ -105,10 +105,13 @@ export const getWinterMateStats = async (startDate: Date, endDate: Date, previou
     
     const snapshot = await usersRef.get();
     
-    let totalUsersUpToEndDate = 0;
-    let totalUsersUpToPreviousEndDate = 0;
+    // Compter TOUS les utilisateurs (comme dans l'autre dashboard WinterMate)
+    // Cela inclut même ceux sans createdAt
+    const totalUsersCount = snapshot.size;
     
-    const chartDataMap = new Map<string, number>();
+    // Pour le trend, on calcule l'augmentation du TOTAL d'utilisateurs entre le début et la fin de la période
+    let totalUsersAtStart = 0; // Total d'utilisateurs au début de la période (startDate)
+    let usersWithoutCreatedAt = 0; // Utilisateurs sans createdAt (on les compte comme existants au début)
     
     // Helper to format date key matching the dashboard controller
     const formatDateKey = (date: Date): string => {
@@ -130,30 +133,28 @@ export const getWinterMateStats = async (startDate: Date, endDate: Date, previou
       }
 
       if (createdAt) {
-        if (createdAt <= endDate) {
-          totalUsersUpToEndDate++;
+        // Compter les utilisateurs créés avant ou au début de la période
+        if (createdAt <= startDate) {
+          totalUsersAtStart++;
         }
-        if (createdAt <= previousEndDate) {
-          totalUsersUpToPreviousEndDate++;
-        }
-        
-        // For chart data (daily accumulation)
-        // We only care about dates within the requested range for the chart?
-        // Or do we want the cumulative count at each day?
-        // The brand-stats controller calculates cumulative for creators.
-        // Let's prepare data for the controller to use.
-        // Actually, the controller iterates over days and calculates cumulative.
-        // We can just return all user creation dates and let the controller do the heavy lifting / mapping?
-        // Or we can return the pre-calculated stats and a map of dates.
+      } else {
+        // Les utilisateurs sans createdAt sont considérés comme existants au début
+        usersWithoutCreatedAt++;
       }
     });
 
-    // Calculate trend
+    // Total au début = utilisateurs avec createdAt <= startDate + utilisateurs sans createdAt
+    totalUsersAtStart += usersWithoutCreatedAt;
+    
+    // Total à la fin = tous les utilisateurs
+    const totalUsersAtEnd = totalUsersCount;
+
+    // Calculate trend : augmentation du total entre début et fin de la période
     let trend = 0;
-    if (totalUsersUpToPreviousEndDate > 0) {
-      trend = Math.round(((totalUsersUpToEndDate - totalUsersUpToPreviousEndDate) / totalUsersUpToPreviousEndDate) * 100);
-    } else if (totalUsersUpToEndDate > 0) {
-      trend = 100;
+    if (totalUsersAtStart > 0) {
+      trend = Math.round(((totalUsersAtEnd - totalUsersAtStart) / totalUsersAtStart) * 100);
+    } else if (totalUsersAtEnd > 0) {
+      trend = 100; // Si pas d'utilisateurs au début mais des utilisateurs à la fin
     }
 
     // Return the raw creation dates so the controller can map them to the chart points easily
@@ -170,7 +171,7 @@ export const getWinterMateStats = async (startDate: Date, endDate: Date, previou
         .sort((a, b) => a.getTime() - b.getTime());
 
     return {
-      count: totalUsersUpToEndDate,
+      count: totalUsersCount, // Compter TOUS les utilisateurs, pas seulement ceux avec createdAt
       trend,
       creationDates
     };

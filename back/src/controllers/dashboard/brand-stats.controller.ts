@@ -450,8 +450,16 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         periodEndDate.setHours(23, 59, 59, 999);
       }
       
-      const count = (winterMateStats.creationDates || []).filter(d => d <= periodEndDate).length;
-      dataPoint.winterMateUsersCount = count;
+      // Pour le dernier point (endDate), utiliser le total complet (tous les utilisateurs)
+      // Pour les autres points, utiliser seulement ceux avec createdAt (cumulatif)
+      if (periodEndDate >= endDate) {
+        // Dernier point : utiliser le total complet
+        dataPoint.winterMateUsersCount = winterMateStats.count;
+      } else {
+        // Points précédents : utiliser seulement ceux avec createdAt (cumulatif)
+        const count = (winterMateStats.creationDates || []).filter(d => d <= periodEndDate).length;
+        dataPoint.winterMateUsersCount = count;
+      }
     }
 
     // Calculer les totaux

@@ -290,11 +290,11 @@ export const BrandDashboardPage = () => {
         )}
       </div>
 
-      {/* KPIs Grid - 6 cartes avec layout personnalisé */}
+      {/* KPIs Grid - 2 lignes : 1 grosse + 3 petites, puis 3 petites + 1 grosse */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        {/* Vues totales - prend 50% (2 colonnes) */}
+        {/* Vues totales - prend 75% (3 colonnes sur desktop) */}
         <Card 
-          className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-2 cursor-pointer ${
+          className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-2 md:col-span-3 cursor-pointer ${
             selectedMetric === 'views' ? 'ring-2 ring-[#0EA5E9] bg-sky-50/50' : ''
           }`}
           onClick={() => setSelectedMetric('views')}
@@ -545,9 +545,22 @@ export const BrandDashboardPage = () => {
           </CardContent>
         </Card>
 
-        {/* CPM moyen - prend 50% (2 colonnes) */}
+        {/* Place réservée pour 8ème KPI - prend 25% (1 colonne) */}
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-1 border-2 border-dashed border-slate-300 bg-slate-50/50">
+          <CardContent className="p-3 sm:p-4 md:p-6 relative flex items-center justify-center min-h-[120px]">
+            <div className="text-center">
+              <div className="p-2 bg-slate-200 text-slate-500 rounded-lg mx-auto mb-2 w-fit">
+                <Plus size={20} className="w-5 h-5" />
+              </div>
+              <p className="text-xs sm:text-sm font-medium text-slate-400">Nouvelle KPI</p>
+              <p className="text-[10px] text-slate-400 mt-1">À venir</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CPM moyen - prend 75% (3 colonnes sur desktop) */}
         <Card 
-          className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 col-span-2 cursor-pointer ${
+          className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200 col-span-2 md:col-span-3 cursor-pointer ${
             selectedMetric === 'cpm' ? 'ring-2 ring-amber-500' : ''
           }`}
           onClick={() => setSelectedMetric('cpm')}
