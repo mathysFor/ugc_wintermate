@@ -244,6 +244,14 @@ async function refreshAllStats(): Promise<void> {
             });
           }
 
+          // Rafraîchir l'URL de la miniature (URLs TikTok temporaires)
+          if (stats.coverImageUrl) {
+            await db
+              .update(campaignSubmissions)
+              .set({ coverImageUrl: stats.coverImageUrl })
+              .where(eq(campaignSubmissions.id, submission.id));
+          }
+
           console.log(
             `[CRON] Stats mises à jour pour la soumission ${submission.id}: ${stats.views} vues`
           );

@@ -457,6 +457,7 @@ export const tiktokService = {
       likes: number;
       comments: number;
       shares: number;
+      coverImageUrl: string | null;
     }>
   > {
     if (videoIds.length === 0) {
@@ -471,6 +472,7 @@ export const tiktokService = {
       likes: number;
       comments: number;
       shares: number;
+      coverImageUrl: string | null;
     }> = [];
 
     for (let i = 0; i < videoIds.length; i += batchSize) {
@@ -482,6 +484,7 @@ export const tiktokService = {
         'like_count',
         'comment_count',
         'share_count',
+        'cover_image_url',
       ].join(',');
 
       const response = await fetch(`${TIKTOK_VIDEO_QUERY_URL}?fields=${fields}`, {
@@ -517,6 +520,7 @@ export const tiktokService = {
           likes: video.like_count || 0,
           comments: video.comment_count || 0,
           shares: video.share_count || 0,
+          coverImageUrl: video.cover_image_url || null,
         });
       }
     }

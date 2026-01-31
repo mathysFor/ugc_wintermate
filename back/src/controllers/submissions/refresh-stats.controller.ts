@@ -30,15 +30,12 @@ export const refreshStats = async (req: Request, res: Response): Promise<void> =
 
     console.log(`[REFRESH] Refresh manuel déclenché par la marque ${brand.name} (user ${userId})`);
 
-    // Lancer le refresh en arrière-plan (ne pas attendre la fin)
-    manualRefresh().catch((error) => {
-      console.error('[REFRESH] Erreur lors du refresh manuel:', error);
-    });
+    await manualRefresh();
 
     const response: RefreshStatsResponse = {
       success: true,
       updated: 0,
-      message: 'Refresh des statistiques lancé. Les stats seront mises à jour dans quelques instants.',
+      message: 'Statistiques TikTok mises à jour.',
     };
 
     res.json(response);
