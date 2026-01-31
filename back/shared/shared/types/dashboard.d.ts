@@ -13,8 +13,8 @@ export interface BrandStatsQuery {
 }
 
 export type ChartDataPoint = {
-  date: string; // YYYY-MM-DD or YYYY-MM
-  label: string; // Formatted label for display
+  date: string;
+  label: string;
   totalViews: number;
   totalCost: number;
   acceptedVideosCount: number;
@@ -39,7 +39,7 @@ export type BrandMonthlyData = {
 };
 
 export type BrandDashboardStats = {
-  monthlyData: BrandMonthlyData[]; // Deprecated, use chartData
+  monthlyData: BrandMonthlyData[];
   chartData: ChartDataPoint[];
   totalViews: number;
   totalSpent: number;
@@ -112,6 +112,7 @@ export type CreatorDashboardStatsResponse = {
     campaignTitle?: string;
     submittedAt?: string;
     tiktokVideoId?: string;
+    tiktokAccountId?: number;
   }>;
   topVideosByEarnings?: Array<{
     videoId: string;
@@ -122,6 +123,7 @@ export type CreatorDashboardStatsResponse = {
     submissionId?: number;
     campaignTitle?: string;
     tiktokVideoId?: string;
+    tiktokAccountId?: number;
   }>;
   submissionsByMonth: Array<{
     month: string;

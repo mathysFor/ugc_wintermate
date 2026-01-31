@@ -9,7 +9,7 @@ export const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const { mutateAsync: resetMutation, isPending, isError, isSuccess } = useResetPassword();
+  const { mutateAsync: resetMutation, isPending, isError } = useResetPassword();
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
