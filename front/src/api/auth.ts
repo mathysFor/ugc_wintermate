@@ -5,6 +5,10 @@ import type {
   CreateAccountInput,
   CreateAccountResponse,
   AuthUser,
+  ForgotPasswordInput,
+  ForgotPasswordResponse,
+  ResetPasswordInput,
+  ResetPasswordResponse,
 } from "@shared/types/auth";
 
 export const useLogin = (options = {}) =>
@@ -12,6 +16,12 @@ export const useLogin = (options = {}) =>
 
 export const useRegister = (options = {}) =>
   useMutator<CreateAccountInput, CreateAccountResponse>("/api/auth/register", options);
+
+export const useForgotPassword = (options = {}) =>
+  useMutator<ForgotPasswordInput, ForgotPasswordResponse>("/api/auth/forgot-password", options);
+
+export const useResetPassword = (options = {}) =>
+  useMutator<ResetPasswordInput, ResetPasswordResponse>("/api/auth/reset-password", options);
 
 export const useMe = (options = {}) =>
   useFetcher<undefined, AuthUser>({

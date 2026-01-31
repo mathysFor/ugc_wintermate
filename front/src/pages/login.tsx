@@ -70,7 +70,7 @@ export const LoginPage = () => {
             <input type="checkbox" className="rounded border-slate-600 bg-slate-900/50 text-[#0EA5E9] accent-[#0EA5E9] focus:ring-[#0EA5E9]/20" />
             Se souvenir de moi
           </label>
-          <a href="#" className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors">Mot de passe oublié ?</a>
+          <Link to="/forgot-password" className="text-[#0EA5E9] hover:text-[#0284C7] transition-colors">Mot de passe oublié ?</Link>
         </div>
 
         <Button 

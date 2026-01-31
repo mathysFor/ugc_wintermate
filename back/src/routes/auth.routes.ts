@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, register, me } from '../controllers/auth';
+import { login, register, me, forgotPassword, resetPassword } from '../controllers/auth';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -15,6 +15,18 @@ router.post('/login', login);
  * @description Crée un nouvel utilisateur
  */
 router.post('/register', register);
+
+/**
+ * @route POST /api/auth/forgot-password
+ * @description Demande de réinitialisation de mot de passe par email
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @route POST /api/auth/reset-password
+ * @description Réinitialisation du mot de passe avec un token
+ */
+router.post('/reset-password', resetPassword);
 
 /**
  * @route GET /api/auth/me

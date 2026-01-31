@@ -90,6 +90,19 @@ export const users = pgTable('users', {
 });
 
 /**
+ * Tokens de réinitialisation de mot de passe (un par demande, expiration 1h)
+ */
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/**
  * Comptes TikTok connectés par les créateurs
  * Un créateur peut connecter plusieurs comptes
  */
