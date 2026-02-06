@@ -57,8 +57,12 @@ export const TiktokCallbackPage = () => {
       try {
         await processCallback({ code, state: state || '', codeVerifier });
         setStatus('success');
+        const returnPath = sessionStorage.getItem('tiktok_oauth_return_path');
+        if (returnPath) {
+          sessionStorage.removeItem('tiktok_oauth_return_path');
+        }
         setTimeout(() => {
-          navigate('/profile', { replace: true });
+          navigate(returnPath || '/profile', { replace: true });
         }, 2000);
       } catch (err) {
         setStatus('error');
