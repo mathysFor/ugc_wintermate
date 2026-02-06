@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetCampaign, useGetMyRewardsStatus } from '@/api/campaigns';
 import { useUploadInvoice } from '@/api/invoices';
-import { useGetTiktokAccounts, useGetTiktokVideos } from '@/api/tiktok';
+import { useGetTiktokAccounts, useGetTiktokVideos, useGetTiktokAuthUrl } from '@/api/tiktok';
 import { useCreateSubmission, useGetPublicCampaignSubmissions, useGetSubmissions, useDeleteSubmission, useGetCampaignSubmissions, useValidateSubmission, useRefuseSubmission } from '@/api/submissions';
 import { useAuthStore } from '@/stores/auth';
 import { queryClient } from '@/api/query-config';
@@ -11,8 +11,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { CampaignActions } from '@/components/campaign-actions';
-import type { TiktokVideo } from '@shared/types/tiktok';
+import type { TiktokVideo, TiktokAccount } from '@shared/types/tiktok';
 import type { SubmissionWithRelations } from '@shared/types/submissions';
 import type { RewardStatus } from '@shared/types/rewards';
 import type { AdsCodeInput } from '@shared/types/invoices';
@@ -462,6 +469,7 @@ export const CampaignDetailPage = () => {
   // Vérifier si l'utilisateur est le propriétaire de la campagne
   const isOwner = user?.id === campaign?.brand.userId;
   const { data: tiktokAccounts } = useGetTiktokAccounts({ enabled: isAuthenticated && user?.isCreator });
+  const { refetch: getTiktokAuthUrl } = useGetTiktokAuthUrl();
 
   // Soumissions publiques (vidéos approuvées)
   const { data: publicSubmissions, isLoading: isLoadingPublicSubmissions } = useGetPublicCampaignSubmissions(campaignId);
@@ -523,6 +531,7 @@ export const CampaignDetailPage = () => {
   const [invoiceStep, setInvoiceStep] = useState<1 | 2>(1);
   const [adsCodes, setAdsCodes] = useState<Record<number, string>>({});
   const [isGiftCard, setIsGiftCard] = useState(false);
+  const [reconnectAccount, setReconnectAccount] = useState<TiktokAccount | null>(null);
 
   // Charger les vidéos quand un compte est sélectionné
   const { data: videosData, isLoading: isLoadingVideos } = useGetTiktokVideos(
@@ -544,6 +553,24 @@ export const CampaignDetailPage = () => {
   const handleSelectAccount = (accountId: number) => {
     setSelectedAccount(accountId);
     setSelectedVideo(null);
+  };
+
+  const handleReconnectTiktok = async () => {
+    if (!reconnectAccount) return;
+    try {
+      sessionStorage.setItem(
+        'tiktok_oauth_return_path',
+        window.location.pathname + window.location.search
+      );
+      const { data } = await getTiktokAuthUrl();
+      if (data) {
+        sessionStorage.setItem('tiktok_oauth_state', data.state);
+        sessionStorage.setItem('tiktok_code_verifier', data.codeVerifier);
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Failed to get TikTok auth URL', error);
+    }
   };
 
   // Obtenir les soumissions acceptées pour cette campagne
@@ -1112,12 +1139,16 @@ export const CampaignDetailPage = () => {
                   {tiktokAccounts?.map((account) => (
                     <div 
                       key={account.id}
-                      onClick={() => account.isValid && handleSelectAccount(account.id)}
+                      onClick={() =>
+                        account.isValid
+                          ? handleSelectAccount(account.id)
+                          : setReconnectAccount(account)
+                      }
                       className={`p-2.5 sm:p-3 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
                         selectedAccount === account.id 
                           ? 'border-[#0EA5E9] bg-sky-50' 
                           : 'border-slate-100 hover:border-slate-200'
-                      } ${!account.isValid && 'opacity-50 cursor-not-allowed'}`}
+                      } ${!account.isValid && 'opacity-50'}`}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
                         <Avatar fallback="T" className="bg-black text-white w-6 h-6 sm:w-8 sm:h-8 text-xs" />
@@ -1221,6 +1252,28 @@ export const CampaignDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Dialog reconnexion TikTok (compte désactivé) */}
+      <Dialog open={!!reconnectAccount} onOpenChange={(open) => !open && setReconnectAccount(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Session expirée</DialogTitle>
+            <DialogDescription>
+              {reconnectAccount
+                ? `La session de @${reconnectAccount.username} a expiré. Reconnectez ce compte pour continuer.`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button variant="ghost" onClick={() => setReconnectAccount(null)}>
+              Annuler
+            </Button>
+            <Button onClick={handleReconnectTiktok} className="bg-[#ED5D3B] hover:bg-[#d94f30]">
+              Reconnecter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Invoice Upload Modal - Stepper 2 étapes */}
       {showInvoiceModal && selectedReward && (
