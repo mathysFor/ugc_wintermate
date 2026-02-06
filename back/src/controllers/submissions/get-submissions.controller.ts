@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { eq, gt, lt, asc, desc, and } from 'drizzle-orm';
+import { eq, gt, lt, asc, desc, and, inArray } from 'drizzle-orm';
 import { db } from '../../db/index';
 import { campaignSubmissions, campaigns, tiktokAccounts, videoStatsCurrent, brands, campaignRewards } from '../../db/schema';
 import type { BrandSector } from '@shared/types/brands';
@@ -40,8 +40,8 @@ export const getSubmissions = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Construire les conditions
-    const conditions: ReturnType<typeof eq>[] = [];
+    // Construire les conditions (toujours filtrer par les comptes TikTok de l'utilisateur)
+    const conditions = [inArray(campaignSubmissions.tiktokAccountId, accountIds)];
 
     if (campaignId) {
       const campaignIdNum = parseInt(campaignId as string, 10);
@@ -65,16 +65,13 @@ export const getSubmissions = async (req: Request, res: Response): Promise<void>
       }
     }
 
-    // Récupérer les soumissions de l'utilisateur
-    let submissions = await db
+    // Récupérer les soumissions de l'utilisateur (tous ses comptes TikTok)
+    const submissions = await db
       .select()
       .from(campaignSubmissions)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .orderBy(direction === 'next' ? asc(campaignSubmissions.id) : desc(campaignSubmissions.id))
       .limit(limitNum + 1);
-
-    // Filtrer par comptes TikTok de l'utilisateur
-    submissions = submissions.filter((s) => accountIds.includes(s.tiktokAccountId));
 
     const hasMore = submissions.length > limitNum;
     const items = hasMore ? submissions.slice(0, -1) : submissions;
