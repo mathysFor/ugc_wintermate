@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react';
-import { useGetCreatorsStats, useGetAllCreators } from '@/api/creators';
+import { useState, useMemo, useEffect } from 'react';
+import { useGetCreatorsStats, useGetAllCreators, useGetCreatorsTracking } from '@/api/creators';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import type { CreatorTrackingItem } from '@shared/types/creators';
 import {
   Eye,
   Euro,
@@ -12,6 +15,8 @@ import {
   Search,
   ArrowUp,
   ArrowDown,
+  UserCheck,
+  ListChecks,
 } from 'lucide-react';
 
 const formatNumber = (num: number): string => {
@@ -34,11 +39,22 @@ const sortOptions: Array<{ value: SortOption; label: string }> = [
   { value: 'createdAt', label: 'Date inscription' },
 ];
 
+type TrackingTiktokFilter = 'all' | 'true' | 'false';
+type TrackingPublishedFilter = 'all' | 'true' | 'false';
+
 export const BrandCreatorsPage = () => {
+  const [activeTab, setActiveTab] = useState<'classement' | 'suivi'>('classement');
   const [sortBy, setSortBy] = useState<SortOption>('views');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [search, setSearch] = useState<string>('');
   const [cursor, setCursor] = useState<string | null>(null);
+
+  // Suivi: filtres et pagination
+  const [filterTiktok, setFilterTiktok] = useState<TrackingTiktokFilter>('all');
+  const [filterPublished, setFilterPublished] = useState<TrackingPublishedFilter>('all');
+  const [trackingCursor, setTrackingCursor] = useState<string | null>(null);
+  const [accumulatedTracking, setAccumulatedTracking] = useState<CreatorTrackingItem[]>([]);
+  const [trackingNextCursor, setTrackingNextCursor] = useState<number | null>(null);
 
   // Récupérer les stats globales
   const { data: stats, isLoading: loadingStats } = useGetCreatorsStats();
@@ -56,6 +72,47 @@ export const BrandCreatorsPage = () => {
       enabled: true,
     }
   );
+
+  const { data: trackingData, isLoading: loadingTracking } = useGetCreatorsTracking(
+    {
+      cursor: trackingCursor ?? undefined,
+      limit: 20,
+      direction: 'next',
+      tiktokConnected: filterTiktok === 'all' ? undefined : filterTiktok,
+      hasPublished: filterPublished === 'all' ? undefined : filterPublished,
+    },
+    { enabled: activeTab === 'suivi' }
+  );
+
+  useEffect(() => {
+    if (activeTab === 'suivi') {
+      setTrackingCursor(null);
+      setAccumulatedTracking([]);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'suivi' || !trackingData) return;
+    if (trackingCursor == null) {
+      setAccumulatedTracking(trackingData.items);
+    } else {
+      setAccumulatedTracking((prev) => [...prev, ...trackingData.items]);
+    }
+    setTrackingNextCursor(trackingData.nextCursor);
+  }, [activeTab, trackingData, trackingCursor]);
+
+  const handleTrackingFilterChange = (tiktok: TrackingTiktokFilter, published: TrackingPublishedFilter) => {
+    setFilterTiktok(tiktok);
+    setFilterPublished(published);
+    setTrackingCursor(null);
+    setAccumulatedTracking([]);
+  };
+
+  const handleTrackingLoadMore = () => {
+    if (trackingNextCursor != null) {
+      setTrackingCursor(String(trackingNextCursor));
+    }
+  };
 
   const handleSortChange = (newSort: SortOption) => {
     if (sortBy === newSort) {
@@ -194,6 +251,19 @@ export const BrandCreatorsPage = () => {
         </Card>
       </div>
 
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'classement' | 'suivi')} className="w-full">
+        <TabsList className="w-full sm:w-auto mb-4">
+          <TabsTrigger value="classement" className="flex-1 sm:flex-none gap-2">
+            <TrendingUp size={16} />
+            Classement
+          </TabsTrigger>
+          <TabsTrigger value="suivi" className="flex-1 sm:flex-none gap-2">
+            <ListChecks size={16} />
+            Suivi
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="classement" className="mt-0">
       {/* Tableau de classement */}
       <Card className="border-0 shadow-lg shadow-slate-200/50">
         <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-slate-50 to-transparent border-b border-slate-100 p-3 sm:p-4 md:p-6">
@@ -345,6 +415,149 @@ export const BrandCreatorsPage = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="suivi" className="mt-0">
+          <Card className="border-0 shadow-lg shadow-slate-200/50">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-slate-50 to-transparent border-b border-slate-100 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Suivi des inscrits</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6">
+              {/* Filtres */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-slate-500">TikTok :</span>
+                  {(['all', 'true', 'false'] as const).map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => handleTrackingFilterChange(value, filterPublished)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        filterTiktok === value
+                          ? 'bg-slate-900 text-white shadow-md'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {value === 'all' && 'Tous'}
+                      {value === 'true' && <><UserCheck size={14} /> Connecté</>}
+                      {value === 'false' && 'Non connecté'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-slate-500">Publication :</span>
+                  {(['all', 'true', 'false'] as const).map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => handleTrackingFilterChange(filterTiktok, value)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        filterPublished === value
+                          ? 'bg-slate-900 text-white shadow-md'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {value === 'all' && 'Tous'}
+                      {value === 'true' && 'A publié'}
+                      {value === 'false' && 'Pas encore publié'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tableau Suivi */}
+              {loadingTracking && accumulatedTracking.length === 0 ? (
+                <div className="space-y-2 sm:space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} className="h-14 sm:h-16 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : accumulatedTracking.length === 0 ? (
+                <div className="text-center py-8 sm:py-12 text-slate-400 bg-slate-50 rounded-lg sm:rounded-xl border border-dashed border-slate-200">
+                  <Users size={32} className="mx-auto mb-2 sm:mb-3 opacity-50 sm:w-10 sm:h-10" />
+                  <p className="text-sm sm:text-base">Aucun créateur ne correspond aux filtres</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-600">CRÉATEUR</th>
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-600 hidden sm:table-cell">EMAIL</th>
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-600">DATE INSCRIPTION</th>
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-600">TIKTOK</th>
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-slate-600">PUBLIÉ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accumulatedTracking.map((creator) => (
+                          <tr
+                            key={creator.id}
+                            className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="py-3 px-2 sm:px-4">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <Avatar
+                                  src={null}
+                                  fallback={`${creator.firstName[0]}${creator.lastName[0]}`}
+                                  size="sm"
+                                />
+                                <div className="min-w-0">
+                                  <p className="text-sm sm:text-base font-medium text-slate-900 truncate">
+                                    {creator.firstName} {creator.lastName}
+                                  </p>
+                                  {creator.username && (
+                                    <p className="text-xs text-slate-500 truncate">@{creator.username}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 sm:px-4 text-sm text-slate-600 truncate max-w-[200px] hidden sm:table-cell">
+                              {creator.email}
+                            </td>
+                            <td className="py-3 px-2 sm:px-4 text-sm text-slate-600">
+                              {new Date(creator.createdAt).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </td>
+                            <td className="py-3 px-2 sm:px-4">
+                              {creator.tiktokConnected ? (
+                                <Badge variant="success">Connecté</Badge>
+                              ) : (
+                                <Badge variant="secondary">Non connecté</Badge>
+                              )}
+                            </td>
+                            <td className="py-3 px-2 sm:px-4">
+                              {creator.hasPublished ? (
+                                <Badge variant="success">Oui</Badge>
+                              ) : (
+                                <Badge variant="outline">Non</Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {trackingData?.hasMore && (
+                    <div className="mt-4 sm:mt-6 flex justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={handleTrackingLoadMore}
+                        disabled={loadingTracking}
+                        className="text-sm sm:text-base"
+                      >
+                        {loadingTracking ? 'Chargement...' : 'Charger plus'}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

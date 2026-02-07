@@ -23,3 +23,19 @@ export type CreatorsStatsResponse = {
   averageViewsPerCreator: number;
 };
 
+export type CreatorTrackingItem = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdAt: string;
+  tiktokConnected: boolean;
+  hasPublished: boolean;
+  username: string | null;
+};
+
+export type CreatorsTrackingResponse = {
+  items: CreatorTrackingItem[];
+  nextCursor: number | null;
+  hasMore: boolean;
+};
