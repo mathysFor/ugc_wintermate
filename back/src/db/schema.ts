@@ -188,6 +188,7 @@ export const campaignSubmissions = pgTable('campaign_submissions', {
   validatedAt: timestamp('validated_at'),
   refuseReason: text('refuse_reason'),
   adsCode: text('ads_code'), // Code d'ads TikTok (requis pour soumettre une facture)
+  visibleInCommunity: boolean('visible_in_community').notNull().default(true), // Afficher dans les vidéos de la communauté
 });
 
 /**

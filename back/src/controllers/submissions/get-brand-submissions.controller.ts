@@ -144,6 +144,7 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
           validatedAt: submission.validatedAt?.toISOString() ?? null,
           refuseReason: submission.refuseReason,
           adsCode: submission.adsCode,
+          visibleInCommunity: submission.visibleInCommunity,
           campaign: {
             id: campaign.id,
             brandId: campaign.brandId,

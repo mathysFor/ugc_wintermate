@@ -10,6 +10,7 @@ import type { SubmissionWithRelations } from '@shared/types/submissions';
 import { 
   Video, 
   Eye, 
+  EyeOff,
   Heart, 
   MessageCircle, 
   Share2, 
@@ -45,8 +46,8 @@ const SubmissionActions = ({ submission, onActionComplete }: {
     },
   });
 
-  const handleValidate = async () => {
-    await validate(undefined);
+  const handleValidate = async (visibleInCommunity: boolean) => {
+    await validate({ visibleInCommunity });
   };
 
   const handleRefuse = async () => {
@@ -83,16 +84,28 @@ const SubmissionActions = ({ submission, onActionComplete }: {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button
         size="sm"
         variant="outline"
         className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-        onClick={handleValidate}
+        onClick={() => handleValidate(true)}
         disabled={isValidating}
+        title="Valider et afficher dans les vidéos de la communauté"
       >
         <Check size={16} className="mr-1" />
-        {isValidating ? 'Validation...' : 'Valider'}
+        {isValidating ? 'Validation...' : 'Valider et afficher'}
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="text-green-600/80 border-green-200/80 hover:bg-green-50/80 hover:text-green-700"
+        onClick={() => handleValidate(false)}
+        disabled={isValidating}
+        title="Valider sans afficher dans les vidéos de la communauté"
+      >
+        <EyeOff size={16} className="mr-1" />
+        {isValidating ? '...' : 'Valider (masquer)'}
       </Button>
       <Button
         size="sm"

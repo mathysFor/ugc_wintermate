@@ -4,6 +4,7 @@ import type {
   SubmissionResponse,
   PaginatedSubmissionsResponse,
   RefreshStatsResponse,
+  ValidateSubmissionInput,
 } from "@shared/types/submissions";
 
 export const useGetSubmissions = (
@@ -39,7 +40,7 @@ export const useCreateSubmission = (campaignId: number, options = {}) =>
   );
 
 export const useValidateSubmission = (submissionId: number, options = {}) =>
-  useMutator<undefined, SubmissionResponse>(`/api/submissions/${submissionId}/validate`, options);
+  useMutator<ValidateSubmissionInput | undefined, SubmissionResponse>(`/api/submissions/${submissionId}/validate`, options);
 
 export const useRefuseSubmission = (submissionId: number, options = {}) =>
   useMutator<{ reason?: string }, SubmissionResponse>(

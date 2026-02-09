@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../db/index';
 import { campaignSubmissions, campaigns, brands, tiktokAccounts, campaignRewards, videoStatsCurrent, users } from '../../db/schema';
 import type { BrandSector } from '@shared/types/brands';
-import type { SubmissionResponse } from '@shared/types/submissions';
+import type { SubmissionResponse, ValidateSubmissionInput } from '@shared/types/submissions';
 import type { AuthUser } from '@shared/types/auth';
 import { notificationService } from '../../services/notifications.service';
 import { tiktokService } from '../../services/tiktok.service';
@@ -64,12 +64,15 @@ export const validateSubmission = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const { visibleInCommunity = true } = (req.body as ValidateSubmissionInput) ?? {};
+
     // Mettre à jour la soumission
     const [updated] = await db
       .update(campaignSubmissions)
       .set({
         status: 'accepted',
         validatedAt: new Date(),
+        visibleInCommunity: Boolean(visibleInCommunity),
       })
       .where(eq(campaignSubmissions.id, submissionId))
       .returning();
@@ -162,6 +165,7 @@ export const validateSubmission = async (req: Request, res: Response): Promise<v
       validatedAt: updated.validatedAt?.toISOString() ?? null,
       refuseReason: updated.refuseReason,
       adsCode: updated.adsCode ?? null,
+      visibleInCommunity: updated.visibleInCommunity,
       campaign: {
         id: campaignData.id,
         brandId: campaignData.brandId,

@@ -32,14 +32,15 @@ export const getPublicCampaignSubmissions = async (req: Request, res: Response):
       return;
     }
 
-    // Récupérer uniquement les soumissions acceptées
+    // Récupérer uniquement les soumissions acceptées et visibles dans la communauté
     const submissions = await db
       .select()
       .from(campaignSubmissions)
       .where(
         and(
           eq(campaignSubmissions.campaignId, campaignId),
-          eq(campaignSubmissions.status, 'accepted')
+          eq(campaignSubmissions.status, 'accepted'),
+          eq(campaignSubmissions.visibleInCommunity, true)
         )
       );
 
@@ -73,6 +74,7 @@ export const getPublicCampaignSubmissions = async (req: Request, res: Response):
           validatedAt: submission.validatedAt?.toISOString() ?? null,
           refuseReason: submission.refuseReason,
           adsCode: submission.adsCode,
+          visibleInCommunity: submission.visibleInCommunity,
           campaign: {
             id: campaign.id,
             brandId: campaign.brandId,

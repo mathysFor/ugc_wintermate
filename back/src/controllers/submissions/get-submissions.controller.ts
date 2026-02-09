@@ -98,6 +98,7 @@ export const getSubmissions = async (req: Request, res: Response): Promise<void>
           validatedAt: submission.validatedAt?.toISOString() ?? null,
           refuseReason: submission.refuseReason,
           adsCode: submission.adsCode,
+          visibleInCommunity: submission.visibleInCommunity,
           campaign: {
             id: campaign.id,
             brandId: campaign.brandId,
@@ -249,6 +250,7 @@ export const getCampaignSubmissions = async (req: Request, res: Response): Promi
           validatedAt: submission.validatedAt?.toISOString() ?? null,
           refuseReason: submission.refuseReason,
           adsCode: submission.adsCode,
+          visibleInCommunity: submission.visibleInCommunity,
           campaign: {
             id: campaign[0].id,
             brandId: campaign[0].brandId,

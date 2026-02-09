@@ -110,6 +110,7 @@ export const refuseSubmission = async (req: Request, res: Response): Promise<voi
       validatedAt: updated.validatedAt?.toISOString() ?? null,
       refuseReason: updated.refuseReason,
       adsCode: updated.adsCode ?? null,
+      visibleInCommunity: updated.visibleInCommunity,
       campaign: {
         id: campaignData.id,
         brandId: campaignData.brandId,

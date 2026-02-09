@@ -39,6 +39,7 @@ import {
   Clock,
   Check,
   X,
+  EyeOff,
   Lock,
   Upload,
   Receipt,
@@ -193,10 +194,10 @@ const PendingVideoThumbnail = ({
     },
   });
 
-  const handleValidate = async (e: React.MouseEvent) => {
+  const handleValidate = async (e: React.MouseEvent, visibleInCommunity: boolean) => {
     e.preventDefault();
     e.stopPropagation();
-    await validate(undefined);
+    await validate({ visibleInCommunity });
   };
 
   const handleRefuse = async () => {
@@ -259,22 +260,34 @@ const PendingVideoThumbnail = ({
         </a>
 
         {/* Boutons d'action en bas */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 flex gap-1">
-          <button
-            onClick={handleValidate}
-            disabled={isValidating}
-            className="flex-1 py-1.5 rounded-lg bg-green-500 hover:bg-green-400 text-white text-xs font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-          >
-            <Check size={12} />
-            {isValidating ? '...' : 'Valider'}
-          </button>
+        <div className="absolute bottom-0 left-0 right-0 p-2 flex flex-col gap-1">
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => handleValidate(e, true)}
+              disabled={isValidating}
+              className="flex-1 py-1.5 rounded-lg bg-green-500 hover:bg-green-400 text-white text-[10px] sm:text-xs font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
+              title="Valider et afficher dans les vidéos de la communauté"
+            >
+              <Check size={12} />
+              {isValidating ? '...' : 'Valider et afficher'}
+            </button>
+            <button
+              onClick={(e) => handleValidate(e, false)}
+              disabled={isValidating}
+              className="flex-1 py-1.5 rounded-lg border border-green-500 text-green-600 hover:bg-green-50 bg-white/90 text-[10px] sm:text-xs font-medium flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
+              title="Valider sans afficher dans les vidéos de la communauté"
+            >
+              <EyeOff size={12} />
+              {isValidating ? '...' : 'Valider (masquer)'}
+            </button>
+          </div>
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowRefuseModal(true);
             }}
-            className="flex-1 py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+            className="w-full py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-medium flex items-center justify-center gap-1 transition-colors"
           >
             <X size={12} />
             Refuser

@@ -22,6 +22,7 @@ export type Submission = {
   validatedAt: string | null;
   refuseReason: string | null;
   adsCode: string | null;
+  visibleInCommunity: boolean;
 };
 
 export type SubmissionWithRelations = Submission & {
@@ -41,6 +42,10 @@ export type CreateSubmissionInput = {
 
 export type RefuseSubmissionInput = {
   reason?: string;
+};
+
+export type ValidateSubmissionInput = {
+  visibleInCommunity?: boolean;
 };
 
 export type PaginatedSubmissionsResponse = {

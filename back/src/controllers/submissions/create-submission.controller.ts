@@ -140,6 +140,7 @@ export const createSubmission = async (req: Request, res: Response): Promise<voi
       validatedAt: created.validatedAt?.toISOString() ?? null,
       refuseReason: created.refuseReason,
       adsCode: created.adsCode,
+      visibleInCommunity: created.visibleInCommunity,
       campaign: {
         id: campaignData.id,
         brandId: campaignData.brandId,
