@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useGetAllCampaigns } from '@/api/campaigns';
+import { useGetGlobalViewTiers, useUpsertGlobalViewTiers } from '@/api/global-view-tiers';
 import { queryClient } from '@/api/query-config';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CampaignActions } from '@/components/campaign-actions';
 import type { CampaignWithRelations, CampaignStatus } from '@shared/types/campaigns';
@@ -17,7 +20,11 @@ import {
   Eye,
   TrendingUp,
   ArrowRight,
-  Video
+  Video,
+  Trophy,
+  ChevronDown,
+  Save,
+  X
 } from 'lucide-react';
 
 // Carte de campagne pour la vue marque
@@ -35,7 +42,7 @@ const BrandCampaignCard = ({
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-slate-50 rounded-xl group hover:bg-slate-100 transition-colors">
       {/* Thumbnail */}
-      <div className="w-full sm:w-20 h-32 sm:h-14 rounded-lg overflow-hidden bg-slate-200 flex-shrink-0">
+      <div className="w-full sm:w-20 h-32 sm:h-14 rounded-lg overflow-hidden bg-slate-200 shrink-0">
         {campaign.coverImageUrl ? (
           <img 
             src={campaign.coverImageUrl} 
@@ -104,6 +111,32 @@ const BrandCampaignCard = ({
     </div>
   );
 };
+
+type GlobalTierInput = {
+  viewsTarget: string;
+  rewardLabel: string;
+};
+
+/** Formats a raw number string to a readable views label, e.g. "1500000" → "1.5M" */
+const formatViewsLabel = (raw: string): string => {
+  const n = Number(raw);
+  if (!n || !Number.isFinite(n)) return '';
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return m % 1 === 0 ? `${m}M` : `${parseFloat(m.toFixed(1))}M`;
+  }
+  if (n >= 1_000) {
+    const k = n / 1_000;
+    return k % 1 === 0 ? `${k}K` : `${parseFloat(k.toFixed(1))}K`;
+  }
+  return n.toLocaleString('fr-FR');
+};
+
+const defaultGlobalTiers: GlobalTierInput[] = [
+  { viewsTarget: '1000000', rewardLabel: 'Récompense palier 1' },
+  { viewsTarget: '1500000', rewardLabel: 'Récompense palier 2' },
+  { viewsTarget: '2000000', rewardLabel: 'Récompense palier 3' },
+];
 
 // Contenu d'un onglet
 const TabContent = ({ 
@@ -182,6 +215,61 @@ const TabContent = ({
 export const BrandCampaignsPage = () => {
   const user = useAuthStore((s) => s.user);
   const { data, isLoading } = useGetAllCampaigns({ status: 'all' });
+  const { data: globalViewTiers, isLoading: loadingGlobalViewTiers } = useGetGlobalViewTiers();
+  const { mutateAsync: saveGlobalViewTiers, isPending: isSavingGlobalViewTiers } = useUpsertGlobalViewTiers({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['global-view-tiers'] });
+    },
+  });
+
+  const [tierInputs, setTierInputs] = useState<GlobalTierInput[]>(defaultGlobalTiers);
+  const [tierError, setTierError] = useState<string | null>(null);
+  const [tiersOpen, setTiersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!globalViewTiers) return;
+    if (globalViewTiers.length === 0) {
+      setTierInputs(defaultGlobalTiers);
+      return;
+    }
+    setTierInputs(
+      globalViewTiers.map((tier) => ({
+        viewsTarget: tier.viewsTarget.toString(),
+        rewardLabel: tier.rewardLabel,
+      }))
+    );
+  }, [globalViewTiers]);
+
+  const handleTierChange = (index: number, field: keyof GlobalTierInput, value: string) => {
+    setTierInputs((prev) =>
+      prev.map((tier, i) => (i === index ? { ...tier, [field]: value } : tier))
+    );
+  };
+
+  const addTierRow = () => {
+    setTierInputs((prev) => [...prev, { viewsTarget: '', rewardLabel: '' }]);
+  };
+
+  const removeTierRow = (index: number) => {
+    setTierInputs((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveGlobalTiers = async () => {
+    const sanitized = tierInputs
+      .map((tier) => ({
+        viewsTarget: Number(tier.viewsTarget),
+        rewardLabel: tier.rewardLabel.trim(),
+      }))
+      .filter((tier) => Number.isFinite(tier.viewsTarget) && tier.viewsTarget > 0 && tier.rewardLabel.length > 0);
+
+    if (sanitized.length === 0) {
+      setTierError('Ajoutez au moins un palier valide.');
+      return;
+    }
+
+    setTierError(null);
+    await saveGlobalViewTiers({ tiers: sanitized });
+  };
 
   // Compter les campagnes par statut
   const myCampaigns = data?.items.filter((c) => c.brand.userId === user?.id) || [];
@@ -206,6 +294,136 @@ export const BrandCampaignsPage = () => {
             Nouvelle campagne
           </Button>
         </Link>
+      </div>
+
+      {/* Global view tiers — compact collapsible */}
+      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setTiersOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-violet-100">
+              <Trophy size={14} className="text-violet-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-slate-900">Paliers de vues</p>
+              {!tiersOpen && !loadingGlobalViewTiers && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {tierInputs.slice(0, 4).map((t, i) => {
+                    const label = formatViewsLabel(t.viewsTarget);
+                    return label ? (
+                      <span
+                        key={`preview-${i}`}
+                        className="inline-flex items-center text-[10px] font-medium bg-slate-100 text-slate-500 rounded-full px-2 py-0.5"
+                      >
+                        <Eye size={9} className="mr-0.5" />
+                        {label}
+                      </span>
+                    ) : null;
+                  })}
+                  {tierInputs.length > 4 && (
+                    <span className="text-[10px] text-slate-400">+{tierInputs.length - 4}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <ChevronDown
+            size={16}
+            className={`text-slate-400 transition-transform duration-200 ${tiersOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {tiersOpen && (
+          <div className="border-t border-slate-100 px-4 py-3 space-y-2">
+            {loadingGlobalViewTiers ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              <>
+                {tierInputs.map((tier, index) => {
+                  const viewsLabel = formatViewsLabel(tier.viewsTarget);
+                  return (
+                    <div
+                      key={`global-tier-${index}`}
+                      className="group relative flex items-center gap-2.5 rounded-lg bg-slate-50 hover:bg-slate-100/80 px-3 py-2 transition-colors"
+                    >
+                      {/* Tier badge */}
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-600 text-[10px] font-bold shrink-0">
+                        {index + 1}
+                      </div>
+
+                      {/* Views input with live preview */}
+                      <div className="relative shrink-0">
+                        <Input
+                          type="number"
+                          value={tier.viewsTarget}
+                          onChange={(e) => handleTierChange(index, 'viewsTarget', e.target.value)}
+                          placeholder="1000000"
+                          className="h-8 text-sm w-28 pr-1 bg-white"
+                        />
+                        {viewsLabel && (
+                          <span className="absolute -top-2 right-1 text-[9px] font-semibold bg-violet-500 text-white rounded px-1 py-px leading-tight">
+                            {viewsLabel}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Reward input */}
+                      <div className="flex-1 min-w-0">
+                        <Input
+                          value={tier.rewardLabel}
+                          onChange={(e) => handleTierChange(index, 'rewardLabel', e.target.value)}
+                          placeholder="Ex: Produit offert, 50€ bonus..."
+                          className="h-8 text-sm bg-white"
+                        />
+                      </div>
+
+                      {/* Remove */}
+                      {tierInputs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeTierRow(index)}
+                          className="p-1 rounded-md text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                        >
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {tierError && <p className="text-xs text-red-600 mt-1">{tierError}</p>}
+
+                <div className="flex items-center justify-between pt-1.5">
+                  <button
+                    type="button"
+                    onClick={addTierRow}
+                    className="text-xs text-violet-500 hover:text-violet-700 flex items-center gap-1 font-medium transition-colors"
+                  >
+                    <Plus size={12} />
+                    Ajouter un palier
+                  </button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSaveGlobalTiers}
+                    disabled={isSavingGlobalViewTiers || loadingGlobalViewTiers}
+                    className="h-7 text-xs px-3 bg-violet-600 hover:bg-violet-700"
+                  >
+                    <Save size={12} className="mr-1" />
+                    {isSavingGlobalViewTiers ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Stats summary */}

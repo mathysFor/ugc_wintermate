@@ -123,17 +123,24 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
     const items = hasMore ? submissions.slice(0, -1) : submissions;
 
     // Récupérer les relations
-    const submissionsWithRelations: SubmissionWithRelations[] = await Promise.all(
-      items.map(async (submission) => {
-        const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, submission.campaignId)).limit(1);
-        const [tiktokAccount] = await db.select().from(tiktokAccounts).where(eq(tiktokAccounts.id, submission.tiktokAccountId)).limit(1);
-        const [stats] = await db.select().from(videoStatsCurrent).where(eq(videoStatsCurrent.submissionId, submission.id)).limit(1);
+    const submissionsWithRelations: SubmissionWithRelations[] = (
+      await Promise.all(
+        items.map(async (submission) => {
+          const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, submission.campaignId)).limit(1);
+          const [tiktokAccount] = await db.select().from(tiktokAccounts).where(eq(tiktokAccounts.id, submission.tiktokAccountId)).limit(1);
+          const [stats] = await db.select().from(videoStatsCurrent).where(eq(videoStatsCurrent.submissionId, submission.id)).limit(1);
 
-        // Récupérer brand et rewards pour la campagne
-        const [brand] = await db.select().from(brands).where(eq(brands.id, campaign.brandId)).limit(1);
-        const rewards = await db.select().from(campaignRewards).where(eq(campaignRewards.campaignId, campaign.id));
+          if (!campaign || !tiktokAccount) {
+            return null;
+          }
 
-        return {
+          // Récupérer brand et rewards pour la campagne
+          const [brand] = await db.select().from(brands).where(eq(brands.id, campaign.brandId)).limit(1);
+          if (!brand) return null;
+
+          const rewards = await db.select().from(campaignRewards).where(eq(campaignRewards.campaignId, campaign.id));
+
+          return {
           id: submission.id,
           campaignId: submission.campaignId,
           tiktokAccountId: submission.tiktokAccountId,
@@ -193,9 +200,10 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
                 updatedAt: stats.updatedAt.toISOString(),
               }
             : undefined,
-        };
-      })
-    );
+          };
+        })
+      )
+    ).filter((s): s is SubmissionWithRelations => s !== null);
 
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
 
@@ -208,6 +216,7 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
 
     res.json(response);
   } catch (error) {
+    console.error('[getBrandSubmissions]', error);
     res.status(500).json({ error: (error as Error).message, code: 'INTERNAL_SERVER_ERROR' });
   }
 };

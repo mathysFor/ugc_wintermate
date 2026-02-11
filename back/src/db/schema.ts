@@ -171,6 +171,17 @@ export const campaignRewards = pgTable('campaign_rewards', {
 });
 
 /**
+ * Paliers globaux de vues (toutes campagnes confondues)
+ */
+export const globalViewTiers = pgTable('global_view_tiers', {
+  id: serial('id').primaryKey(),
+  viewsTarget: bigint('views_target', { mode: 'number' }).notNull(),
+  rewardLabel: text('reward_label').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/**
  * Soumissions de vidéos par les créateurs
  */
 export const campaignSubmissions = pgTable('campaign_submissions', {

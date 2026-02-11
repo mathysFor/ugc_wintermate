@@ -55,4 +55,3 @@ export type ResetPasswordInput = {
 export type ResetPasswordResponse = {
   message: string;
 };
-

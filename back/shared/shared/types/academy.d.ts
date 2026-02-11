@@ -71,7 +71,7 @@ export type UpdateAcademyContentInput = Partial<CreateAcademyContentInput>;
 
 export type CreateAcademyCategoryInput = {
   name: string;
-  slug: string;
+  slug?: string; // optionnel : le backend le génère à partir du nom
   description?: string;
   icon?: string;
   order?: number;

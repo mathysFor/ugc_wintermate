@@ -100,18 +100,24 @@ export const getBrandInvoices = async (req: Request, res: Response): Promise<voi
     const items = hasMore ? invoiceList.slice(0, -1) : invoiceList;
 
     // Récupérer les relations
-    const invoicesWithRelations: InvoiceWithRelations[] = await Promise.all(
-      items.map(async (invoice) => {
-        const [submission] = await db.select().from(campaignSubmissions).where(eq(campaignSubmissions.id, invoice.submissionId)).limit(1);
-        const [reward] = await db.select().from(campaignRewards).where(eq(campaignRewards.id, invoice.rewardId)).limit(1);
-        const campaign = brandCampaigns.find((c) => c.id === submission.campaignId);
-        const [tiktokAccount] = await db.select().from(tiktokAccounts).where(eq(tiktokAccounts.id, submission.tiktokAccountId)).limit(1);
+    const invoicesWithRelations: InvoiceWithRelations[] = (
+      await Promise.all(
+        items.map(async (invoice) => {
+          const [submission] = await db.select().from(campaignSubmissions).where(eq(campaignSubmissions.id, invoice.submissionId)).limit(1);
+          const [reward] = await db.select().from(campaignRewards).where(eq(campaignRewards.id, invoice.rewardId)).limit(1);
 
-        // Récupérer tous les comptes TikTok du créateur (via userId du compte TikTok de la soumission)
-        const creatorTiktokAccounts = await db
-          .select()
-          .from(tiktokAccounts)
-          .where(eq(tiktokAccounts.userId, tiktokAccount.userId));
+          if (!submission || !reward) return null;
+
+          const campaign = brandCampaigns.find((c) => c.id === submission.campaignId);
+          const [tiktokAccount] = await db.select().from(tiktokAccounts).where(eq(tiktokAccounts.id, submission.tiktokAccountId)).limit(1);
+
+          if (!tiktokAccount) return null;
+
+          // Récupérer tous les comptes TikTok du créateur (via userId du compte TikTok de la soumission)
+          const creatorTiktokAccounts = await db
+            .select()
+            .from(tiktokAccounts)
+            .where(eq(tiktokAccounts.userId, tiktokAccount.userId));
 
         const creatorAccountIds = creatorTiktokAccounts.map((a) => a.id);
 
@@ -178,11 +184,12 @@ export const getBrandInvoices = async (req: Request, res: Response): Promise<voi
             coverImageUrl: campaign?.coverImageUrl ?? null,
             brandName: brand.name,
           },
-          creatorUsername: tiktokAccount?.username ?? 'Créateur inconnu',
+          creatorUsername: tiktokAccount.username,
           adsCodesStatus,
         };
-      })
-    );
+        })
+      )
+    ).filter((inv): inv is InvoiceWithRelations => inv !== null);
 
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
 
@@ -195,6 +202,7 @@ export const getBrandInvoices = async (req: Request, res: Response): Promise<voi
 
     res.json(response);
   } catch (error) {
+    console.error('[getBrandInvoices]', error);
     res.status(500).json({ error: (error as Error).message, code: 'INTERNAL_SERVER_ERROR' });
   }
 };

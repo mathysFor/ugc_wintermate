@@ -13,6 +13,8 @@ import notificationsRoutes from './routes/notifications.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import referralRoutes from './routes/referral.routes';
 import creatorsRoutes from './routes/creators.routes';
+import academyRoutes from './routes/academy.routes';
+import globalViewTiersRoutes from './routes/global-view-tiers.routes';
 
 // #region agent log
 fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.ts:15',message:'Importing creatorsRoutes',data:{hasCreatorsRoutes:!!creatorsRoutes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -60,6 +62,8 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/referral', referralRoutes);
 app.use('/api/creators', creatorsRoutes);
+app.use('/api/academy', academyRoutes);
+app.use('/api/global-view-tiers', globalViewTiersRoutes);
 
 // #region agent log
 fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.ts:58',message:'Registered /api/creators route',data:{creatorsRoutesType:typeof creatorsRoutes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});

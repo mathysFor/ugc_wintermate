@@ -11,6 +11,7 @@ import {
   Legend,
 } from 'recharts';
 import { useGetCreatorDashboardStats } from '@/api/dashboard';
+import { useGetGlobalViewTiers } from '@/api/global-view-tiers';
 import { useGetTiktokAccounts } from '@/api/tiktok';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,6 +30,9 @@ import {
   Video,
   ArrowRight,
   ExternalLink,
+  Gift,
+  Lock,
+  CheckCircle2,
 } from 'lucide-react';
 
 const formatNumber = (num: number): string => {
@@ -46,6 +50,12 @@ const formatMonth = (monthStr: string): string => {
 const formatEuros = (cents: number): string => {
   return `${(cents / 100).toFixed(0)}€`;
 };
+
+const defaultViewTiers = [
+  { threshold: 1_000_000, rewardLabel: 'Récompense palier 1' },
+  { threshold: 1_500_000, rewardLabel: 'Récompense palier 2' },
+  { threshold: 2_000_000, rewardLabel: 'Récompense palier 3' },
+];
 
 // Medal icons for podium
 const MedalIcon = ({ rank }: { rank: number }) => {
@@ -84,6 +94,7 @@ const MedalIcon = ({ rank }: { rank: number }) => {
 export const CreatorDashboardPage = () => {
   const { data: dashboardStats, isLoading: loadingStats } = useGetCreatorDashboardStats();
   const { data: tiktokAccounts, isLoading: loadingAccounts } = useGetTiktokAccounts();
+  const { data: globalViewTiers } = useGetGlobalViewTiers();
 
   // Prepare chart data
   const chartData =
@@ -95,9 +106,132 @@ export const CreatorDashboardPage = () => {
     })) || [];
 
   const hasData = chartData.some((d) => d.earningsPaid > 0 || d.views > 0);
+  const totalViews = dashboardStats?.totalViews || 0;
+  const viewTiers =
+    globalViewTiers && globalViewTiers.length > 0
+      ? globalViewTiers
+          .map((tier) => ({ threshold: tier.viewsTarget, rewardLabel: tier.rewardLabel }))
+          .sort((a, b) => a.threshold - b.threshold)
+      : defaultViewTiers;
+  const maxTier = viewTiers[viewTiers.length - 1]?.threshold || 0;
+  const progressValue = maxTier > 0 ? Math.min(100, (totalViews / maxTier) * 100) : 0;
+
+  const unlockedCount = viewTiers.filter((t) => totalViews >= t.threshold).length;
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
+      {/* Views Rewards Progress — top of page */}
+      <div className="relative rounded-lg sm:rounded-xl md:rounded-2xl bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 md:p-8">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-sky-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-sky-500/5 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative">
+          {/* Header row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 sm:p-2.5 bg-linear-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg shadow-amber-500/20">
+                <Trophy size={18} className="text-white sm:w-5 sm:h-5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-bold text-white">Paliers de vues</h2>
+                <p className="text-xs sm:text-sm text-slate-400">
+                  {unlockedCount}/{viewTiers.length} palier{unlockedCount > 1 ? 's' : ''} débloqué{unlockedCount > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-bold text-white">{formatNumber(totalViews)}</span>
+              <span className="text-sm sm:text-base text-slate-400 font-medium">/ {formatNumber(maxTier)} vues</span>
+            </div>
+          </div>
+
+          {/* Progress bar with milestones + hover tooltips */}
+          <div className="relative pt-2 pb-2">
+            {/* Track */}
+            <div className="h-3 sm:h-4 rounded-full bg-slate-700/80 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-linear-to-r from-sky-500 via-cyan-400 to-emerald-400 transition-all duration-1000 ease-out relative"
+                style={{ width: `${progressValue}%` }}
+              >
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+              </div>
+            </div>
+
+            {/* Milestone markers with hover popup */}
+            {viewTiers.map((tier, idx) => {
+              const position = (tier.threshold / maxTier) * 100;
+              const isUnlocked = totalViews >= tier.threshold;
+              const isNext = !isUnlocked && (idx === 0 || totalViews >= viewTiers[idx - 1].threshold);
+              const remaining = tier.threshold - totalViews;
+              return (
+                <div
+                  key={tier.threshold}
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 group/tip"
+                  style={{ left: `${position}%` }}
+                >
+                  {/* The dot */}
+                  <div
+                    className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover/tip:scale-125 ${
+                      isUnlocked
+                        ? 'bg-emerald-400 border-emerald-300 shadow-lg shadow-emerald-400/40'
+                        : 'bg-slate-700 border-slate-500 group-hover/tip:border-slate-400'
+                    }`}
+                  >
+                    {isUnlocked ? (
+                      <CheckCircle2 size={12} className="text-white sm:w-3.5 sm:h-3.5" />
+                    ) : (
+                      <Gift size={10} className="text-slate-400 group-hover/tip:text-slate-300 sm:w-3 sm:h-3" />
+                    )}
+                  </div>
+
+                  {/* Tooltip popup on hover */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 scale-95 pointer-events-none group-hover/tip:opacity-100 group-hover/tip:scale-100 group-hover/tip:pointer-events-auto transition-all duration-200 z-10">
+                    <div className={`rounded-xl px-3 py-2.5 shadow-xl backdrop-blur-sm whitespace-nowrap text-center ${
+                      isUnlocked
+                        ? 'bg-emerald-900/90 border border-emerald-500/30'
+                        : 'bg-slate-800/95 border border-slate-600/40'
+                    }`}>
+                      <p className={`text-[10px] sm:text-xs font-semibold mb-0.5 ${isUnlocked ? 'text-emerald-300' : isNext ? 'text-sky-400' : 'text-slate-400'}`}>
+                        Palier {idx + 1}
+                      </p>
+                      <p className="text-sm sm:text-base font-bold text-white">
+                        {formatNumber(tier.threshold)} vues
+                      </p>
+                      <p className="text-[10px] sm:text-xs text-slate-300 mt-0.5">{tier.rewardLabel}</p>
+                      <div className="mt-1.5 pt-1.5 border-t border-white/10">
+                        {isUnlocked ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-emerald-400">
+                            <CheckCircle2 size={10} />
+                            Débloqué
+                          </span>
+                        ) : isNext ? (
+                          <span className="text-[10px] sm:text-xs text-sky-400">
+                            Encore {formatNumber(remaining > 0 ? remaining : 0)} vues
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-slate-500">
+                            <Lock size={9} />
+                            Verrouillé
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Tooltip arrow */}
+                    <div className={`w-2.5 h-2.5 rotate-45 mx-auto -mt-1.5 ${
+                      isUnlocked ? 'bg-emerald-900/90 border-r border-b border-emerald-500/30' : 'bg-slate-800/95 border-r border-b border-slate-600/40'
+                    }`} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* Header with gradient background */}
       <div className="relative overflow-hidden rounded-lg sm:rounded-xl md:rounded-2xl bg-gradient-to-br from-[#0EA5E9] via-sky-500 to-cyan-500 p-4 sm:p-6 md:p-8 text-white">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-50 pointer-events-none" />
