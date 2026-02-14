@@ -123,9 +123,8 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
     const items = hasMore ? submissions.slice(0, -1) : submissions;
 
     // Récupérer les relations
-    const submissionsWithRelations: SubmissionWithRelations[] = (
-      await Promise.all(
-        items.map(async (submission) => {
+    const rawSubmissions = await Promise.all(
+      items.map(async (submission) => {
           const [campaign] = await db.select().from(campaigns).where(eq(campaigns.id, submission.campaignId)).limit(1);
           const [tiktokAccount] = await db.select().from(tiktokAccounts).where(eq(tiktokAccounts.id, submission.tiktokAccountId)).limit(1);
           const [stats] = await db.select().from(videoStatsCurrent).where(eq(videoStatsCurrent.submissionId, submission.id)).limit(1);
@@ -202,8 +201,8 @@ export const getBrandSubmissions = async (req: Request, res: Response): Promise<
             : undefined,
           };
         })
-      )
-    ).filter((s): s is SubmissionWithRelations => s !== null);
+    );
+    const submissionsWithRelations = rawSubmissions.filter((s) => s !== null) as SubmissionWithRelations[];
 
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
 

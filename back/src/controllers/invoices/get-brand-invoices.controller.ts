@@ -100,9 +100,8 @@ export const getBrandInvoices = async (req: Request, res: Response): Promise<voi
     const items = hasMore ? invoiceList.slice(0, -1) : invoiceList;
 
     // Récupérer les relations
-    const invoicesWithRelations: InvoiceWithRelations[] = (
-      await Promise.all(
-        items.map(async (invoice) => {
+    const rawInvoices = await Promise.all(
+      items.map(async (invoice) => {
           const [submission] = await db.select().from(campaignSubmissions).where(eq(campaignSubmissions.id, invoice.submissionId)).limit(1);
           const [reward] = await db.select().from(campaignRewards).where(eq(campaignRewards.id, invoice.rewardId)).limit(1);
 
@@ -188,8 +187,8 @@ export const getBrandInvoices = async (req: Request, res: Response): Promise<voi
           adsCodesStatus,
         };
         })
-      )
-    ).filter((inv): inv is InvoiceWithRelations => inv !== null);
+    );
+    const invoicesWithRelations = rawInvoices.filter((inv) => inv !== null) as InvoiceWithRelations[];
 
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
 
