@@ -487,9 +487,9 @@ export const CampaignDetailPage = () => {
   // Soumissions publiques (vidéos approuvées)
   const { data: publicSubmissions, isLoading: isLoadingPublicSubmissions } = useGetPublicCampaignSubmissions(campaignId);
 
-  // Mes soumissions (si créateur)
+  // Mes soumissions (si créateur) - limit 100 pour inclure toutes les vidéos dans le formulaire codes d'ads
   const { data: mySubmissionsData, isLoading: isLoadingMySubmissions } = useGetSubmissions(
-    { campaignId: String(campaignId) },
+    { campaignId: String(campaignId), limit: 100 },
     { enabled: isAuthenticated && user?.isCreator }
   );
   const mySubmissions = mySubmissionsData?.items || [];
@@ -526,6 +526,7 @@ export const CampaignDetailPage = () => {
       setInvoiceFile(null);
       setInvoiceStep(1);
       setAdsCodes({});
+      setUploadInvoiceError(null);
     },
   });
 
@@ -544,6 +545,7 @@ export const CampaignDetailPage = () => {
   const [invoiceStep, setInvoiceStep] = useState<1 | 2>(1);
   const [adsCodes, setAdsCodes] = useState<Record<number, string>>({});
   const [isGiftCard, setIsGiftCard] = useState(false);
+  const [uploadInvoiceError, setUploadInvoiceError] = useState<string | null>(null);
   const [reconnectAccount, setReconnectAccount] = useState<TiktokAccount | null>(null);
 
   // Charger les vidéos quand un compte est sélectionné
@@ -595,6 +597,7 @@ export const CampaignDetailPage = () => {
     setInvoiceStep(1);
     setInvoiceFile(null);
     setIsGiftCard(false);
+    setUploadInvoiceError(null);
     // Initialiser les codes d'ads avec les valeurs existantes
     const initialAdsCodes: Record<number, string> = {};
     acceptedSubmissions.forEach((sub) => {
@@ -631,19 +634,27 @@ export const CampaignDetailPage = () => {
     if (!selectedReward?.anchorSubmissionId || !allAdsCodesProvided) return;
     // Si paiement par facture, le fichier est obligatoire
     if (!isGiftCard && !invoiceFile) return;
-    
+
+    setUploadInvoiceError(null);
+
     const adsCodesArray: AdsCodeInput[] = acceptedSubmissions.map((sub) => ({
       submissionId: sub.id,
       adsCode: adsCodes[sub.id].trim(),
     }));
 
-    await uploadInvoice({
-      submissionId: selectedReward.anchorSubmissionId,
-      rewardId: selectedReward.rewardId,
-      paymentMethod: isGiftCard ? 'gift_card' : 'invoice',
-      file: invoiceFile ?? undefined,
-      adsCodes: adsCodesArray,
-    });
+    try {
+      await uploadInvoice({
+        submissionId: selectedReward.anchorSubmissionId,
+        rewardId: selectedReward.rewardId,
+        paymentMethod: isGiftCard ? 'gift_card' : 'invoice',
+        file: invoiceFile ?? undefined,
+        adsCodes: adsCodesArray,
+      });
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { error?: string } } };
+      const message = axiosError?.response?.data?.error ?? 'Une erreur est survenue lors de l\'envoi.';
+      setUploadInvoiceError(message);
+    }
   };
 
   // Gestion du drag & drop pour le fichier PDF
@@ -1435,15 +1446,16 @@ export const CampaignDetailPage = () => {
                 )}
 
                 <div className="flex gap-3 pt-4">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setShowInvoiceModal(false);
                       setSelectedReward(null);
                       setInvoiceFile(null);
                       setInvoiceStep(1);
                       setIsGiftCard(false);
-                    }} 
+                      setUploadInvoiceError(null);
+                    }}
                     className="flex-1 h-12"
                   >
                     Annuler
@@ -1515,6 +1527,12 @@ export const CampaignDetailPage = () => {
                       <Clock size={12} />
                       Tous les codes d'ads doivent être renseignés
                     </p>
+                  )}
+
+                  {uploadInvoiceError && (
+                    <div className="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm mt-3">
+                      {uploadInvoiceError}
+                    </div>
                   )}
                 </div>
 
