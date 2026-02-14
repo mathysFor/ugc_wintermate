@@ -6,6 +6,7 @@ export { ResetPasswordPage } from './reset-password';
 
 // Landing
 export { LandingPage } from './landing';
+export { CreatorsLandingPage } from './creators';
 
 // Dashboard
 export { DashboardPage } from './dashboard';

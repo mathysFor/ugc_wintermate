@@ -6,7 +6,7 @@ import { useState, useRef } from 'react';
 import { HeroSection } from '@/components/landing/hero-section';
 import { motion } from 'framer-motion';
 
-// Vidéos TikTok des créateurs qui participent aux campagnes WinterMate
+// Vidéos TikTok des créateurs qui participent aux campagnes Winter Mate
 const featuredVideos = [
   { type: 'tiktok', id: "7535402685021867286" },
   { type: 'tiktok', id: "7508724778455403798" },
@@ -104,7 +104,7 @@ const steps = [
   {
     number: "02", 
     title: "Poste ta vidéo",
-    description: "Mentionne WinterMate dans ton contenu.",
+    description: "Mentionne Winter Mate dans ton contenu.",
     icon: Eye,
   },
   {
@@ -273,7 +273,7 @@ export const LandingPage = () => {
                 transition={{ delay: 0.1 }}
                 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4"
               >
-                Ils parlent de <span className="text-blue-400">WinterMate</span>.
+                Ils parlent de <span className="text-blue-400">Winter Mate</span>.
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -327,7 +327,7 @@ export const LandingPage = () => {
             <Link to="/terms-of-service" className="hover:text-white transition-colors">Conditions d'utilisation</Link>
             <Link to="/privacy-policy" className="hover:text-white transition-colors">Politique de confidentialité</Link>
           </div>
-          <p className="text-sm text-zinc-600">© 2025 WinterMate</p>
+          <p className="text-sm text-zinc-600">© 2025 Winter Mate</p>
         </div>
       </footer>
     </div>

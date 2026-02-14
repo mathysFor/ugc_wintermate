@@ -55,11 +55,11 @@ export const MainLayout = ({ children }: { children?: ReactNode }) => {
   });
   const pendingInvoicesCount = brandInvoices?.pendingCount || 0;
 
-  // La landing page doit toujours être affichée sans layout, même si l'utilisateur est connecté
-  const isLandingPage = location.pathname === '/';
+  // Pages publiques qui doivent toujours être affichées sans layout, même si l'utilisateur est connecté
+  const isFullScreenPage = location.pathname === '/' || location.pathname === '/creators';
 
-  // Si non authentifié OU si c'est la landing page, afficher le contenu sans sidebar
-  if (!isAuthenticated || isLandingPage) {
+  // Si non authentifié OU si c'est une page full-screen, afficher le contenu sans sidebar
+  if (!isAuthenticated || isFullScreenPage) {
     return <>{children || <Outlet />}</>;
   }
 

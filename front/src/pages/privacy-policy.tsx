@@ -36,7 +36,7 @@ export const PrivacyPolicyPage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
                 <p className="leading-relaxed">
-                  WinterMate s'engage à protéger votre vie privée. Cette Politique de Confidentialité explique comment nous 
+                  Winter Mate s'engage à protéger votre vie privée. Cette Politique de Confidentialité explique comment nous 
                   collectons, utilisons, partageons et protégeons vos informations personnelles lorsque vous utilisez notre 
                   plateforme.
                 </p>

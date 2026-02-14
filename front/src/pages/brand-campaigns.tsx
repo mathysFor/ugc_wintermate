@@ -217,8 +217,8 @@ export const BrandCampaignsPage = () => {
   const { data, isLoading } = useGetAllCampaigns({ status: 'all' });
   const { data: globalViewTiers, isLoading: loadingGlobalViewTiers } = useGetGlobalViewTiers();
   const { mutateAsync: saveGlobalViewTiers, isPending: isSavingGlobalViewTiers } = useUpsertGlobalViewTiers({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['global-view-tiers'] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['global-view-tiers'] });
     },
   });
 

@@ -135,8 +135,9 @@ export const EditCampaignPage = () => {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-      queryClient.invalidateQueries({ queryKey: ['campaigns', campaignId] });
+      // Attendre le refetch pour que les récompenses soient à jour avant navigation
+      await queryClient.refetchQueries({ queryKey: ['campaigns', campaignId] });
+      await queryClient.refetchQueries({ queryKey: ['campaigns'] });
       navigate(`/campaign/${campaignId}`);
     } catch (err) {
       console.error('Erreur lors de la sauvegarde:', err);

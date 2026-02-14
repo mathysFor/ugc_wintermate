@@ -82,7 +82,7 @@ export function HeroSection() {
                 variants={itemVariants}
                 className="text-xl md:text-2xl text-white/90 max-w-xl mx-auto mb-8 font-light"
               >
-                Créez du contenu TikTok pour <span className="font-semibold text-blue-400">WinterMate</span>.
+                Créez du contenu TikTok pour <span className="font-semibold text-blue-400">Winter Mate</span>.
                 <br className="hidden md:block" />
                 Plus ta vidéo performe, plus tu gagnes.
               </motion.p>

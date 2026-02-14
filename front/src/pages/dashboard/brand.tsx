@@ -177,7 +177,7 @@ export const BrandDashboardPage = () => {
       acceptedVideos: { dataKey: 'acceptedVideos', name: 'Vidéos acceptées', color: '#a78bfa', gradient: 'url(#gradientVideos)' },
       activeCampaigns: { dataKey: 'activeCampaigns', name: 'Campagnes actives', color: '#f472b6', gradient: 'url(#gradientCampaigns)' },
       creators: { dataKey: 'creators', name: showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits', color: '#fbbf24', gradient: 'url(#gradientCreators)' },
-      winterMateUsers: { dataKey: 'winterMateUsers', name: 'Utilisateurs WinterMate', color: '#8b5cf6', gradient: 'url(#gradientWinterMate)' },
+      winterMateUsers: { dataKey: 'winterMateUsers', name: 'Utilisateurs Winter Mate', color: '#8b5cf6', gradient: 'url(#gradientWinterMate)' },
       cpm: { dataKey: 'cpm', name: 'CPM moyen', color: '#fb923c', gradient: 'url(#gradientCpm)' },
     };
     
@@ -463,7 +463,7 @@ export const BrandDashboardPage = () => {
           </CardContent>
         </Card>
 
-        {/* WinterMate Users - prend 25% (1 colonne) */}
+        {/* Winter Mate Users - prend 25% (1 colonne) */}
         <Card 
           className={`group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden relative col-span-1 cursor-pointer ${
             selectedMetric === 'winterMateUsers' ? 'ring-2 ring-violet-500 bg-violet-50/50' : ''
@@ -473,7 +473,7 @@ export const BrandDashboardPage = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           <CardContent className="p-3 sm:p-4 md:p-6 relative">
             <div className="flex items-center justify-between mb-2 sm:mb-3 md:mb-4">
-              <p className="text-xs sm:text-sm font-medium text-slate-500">Utilisateurs WinterMate</p>
+              <p className="text-xs sm:text-sm font-medium text-slate-500">Utilisateurs Winter Mate</p>
               <div className="p-1.5 sm:p-2 bg-violet-100 text-violet-600 rounded-lg group-hover:scale-110 transition-transform">
                 <Smartphone size={16} className="sm:w-5 sm:h-5" />
               </div>
@@ -612,7 +612,7 @@ export const BrandDashboardPage = () => {
                   {selectedMetric === 'acceptedVideos' && 'Vidéos acceptées'}
                   {selectedMetric === 'activeCampaigns' && 'Campagnes actives'}
                   {selectedMetric === 'creators' && (showActiveCreatorsOnly ? 'Créateurs actifs' : 'Créateurs inscrits')}
-                  {selectedMetric === 'winterMateUsers' && 'Utilisateurs WinterMate'}
+                  {selectedMetric === 'winterMateUsers' && 'Utilisateurs Winter Mate'}
                   {selectedMetric === 'cpm' && 'CPM moyen'}
                 </CardTitle>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">

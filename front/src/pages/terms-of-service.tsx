@@ -36,7 +36,7 @@ export const TermsOfServicePage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">1. Acceptation des conditions</h2>
                 <p className="leading-relaxed">
-                  En accédant et en utilisant WinterMate, vous acceptez d'être lié par les présentes Conditions Générales d'Utilisation. 
+                  En accédant et en utilisant Winter Mate, vous acceptez d'être lié par les présentes Conditions Générales d'Utilisation. 
                   Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
                 </p>
               </section>
@@ -44,7 +44,7 @@ export const TermsOfServicePage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">2. Description du service</h2>
                 <p className="leading-relaxed">
-                  WinterMate est une plateforme qui connecte les créateurs de contenu TikTok avec des marques pour créer des campagnes 
+                  Winter Mate est une plateforme qui connecte les créateurs de contenu TikTok avec des marques pour créer des campagnes 
                   de marketing d'influence. Les créateurs peuvent gagner de l'argent en créant et en publiant du contenu conforme 
                   aux exigences des campagnes.
                 </p>
@@ -53,7 +53,7 @@ export const TermsOfServicePage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">3. Compte utilisateur</h2>
                 <p className="leading-relaxed mb-4">
-                  Pour utiliser WinterMate, vous devez :
+                  Pour utiliser Winter Mate, vous devez :
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>Créer un compte avec des informations exactes et à jour</li>
@@ -73,7 +73,7 @@ export const TermsOfServicePage = () => {
                   <li>Respecter les droits de propriété intellectuelle</li>
                   <li>Respecter les règles de la communauté TikTok</li>
                   <li>Ne pas publier de contenu offensant, illégal ou trompeur</li>
-                  <li>Mentionner clairement WinterMate dans votre contenu conformément aux exigences</li>
+                  <li>Mentionner clairement Winter Mate dans votre contenu conformément aux exigences</li>
                 </ul>
               </section>
 
@@ -84,7 +84,7 @@ export const TermsOfServicePage = () => {
                   Les montants sont calculés en fonction des vues validées et peuvent varier selon la campagne.
                 </p>
                 <p className="leading-relaxed">
-                  WinterMate se réserve le droit de retenir ou d'annuler un paiement en cas de non-respect des conditions 
+                  Winter Mate se réserve le droit de retenir ou d'annuler un paiement en cas de non-respect des conditions 
                   de la campagne ou de violation de ces conditions générales.
                 </p>
               </section>
@@ -93,7 +93,7 @@ export const TermsOfServicePage = () => {
                 <h2 className="text-2xl font-bold text-white mb-4">6. Propriété intellectuelle</h2>
                 <p className="leading-relaxed">
                   Vous conservez tous les droits sur le contenu que vous créez. En participant à une campagne, vous accordez 
-                  à WinterMate et à la marque partenaire une licence non exclusive pour utiliser, reproduire et distribuer 
+                  à Winter Mate et à la marque partenaire une licence non exclusive pour utiliser, reproduire et distribuer 
                   votre contenu dans le cadre de la campagne et à des fins promotionnelles.
                 </p>
               </section>
@@ -101,7 +101,7 @@ export const TermsOfServicePage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">7. Limitation de responsabilité</h2>
                 <p className="leading-relaxed">
-                  WinterMate ne peut être tenu responsable des dommages directs, indirects, accessoires ou consécutifs résultant 
+                  Winter Mate ne peut être tenu responsable des dommages directs, indirects, accessoires ou consécutifs résultant 
                   de l'utilisation ou de l'impossibilité d'utiliser notre service. Nous ne garantissons pas que le service sera 
                   ininterrompu, sécurisé ou exempt d'erreurs.
                 </p>
@@ -110,7 +110,7 @@ export const TermsOfServicePage = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">8. Modification des conditions</h2>
                 <p className="leading-relaxed">
-                  WinterMate se réserve le droit de modifier ces conditions à tout moment. Les modifications entreront en vigueur 
+                  Winter Mate se réserve le droit de modifier ces conditions à tout moment. Les modifications entreront en vigueur 
                   dès leur publication sur cette page. Il est de votre responsabilité de consulter régulièrement ces conditions.
                 </p>
               </section>

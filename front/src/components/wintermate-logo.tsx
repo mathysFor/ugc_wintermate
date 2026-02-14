@@ -2,7 +2,7 @@ export function WinterMateLogo({ className = "h-20 w-auto" }: { className?: stri
   return (
     <img 
       src="/logo_winterMate_Full.png" 
-      alt="WinterMate" 
+      alt="Winter Mate" 
       className={className}
     />
   );

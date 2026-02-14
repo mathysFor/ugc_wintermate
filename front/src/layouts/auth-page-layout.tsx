@@ -40,7 +40,7 @@ export const AuthPageLayout = ({ children, title, subtitle }: AuthPageLayoutProp
               <WinterMateLogo className="h-10 w-auto" />
             </div>
             <p className="text-4xl font-black max-w-md leading-tight mb-4">
-              Rejoignez le programme créateurs <span className="text-blue-400">WinterMate</span> et monétisez votre passion pour le ski.
+              Rejoignez le programme créateurs <span className="text-blue-400">Winter Mate</span> et monétisez votre passion pour le ski.
             </p>
             <p className="text-lg text-zinc-300 max-w-md">
               Partagez votre amour du ski et générez des revenus avec vos vidéos TikTok.
@@ -48,14 +48,14 @@ export const AuthPageLayout = ({ children, title, subtitle }: AuthPageLayoutProp
           </div>
           
           <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-zinc-700/50">
-            <p className="text-lg mb-4">"Grâce à WinterMate, j'ai pu partager ma passion pour le ski et générer des revenus complémentaires avec mes vidéos TikTok."</p>
+            <p className="text-lg mb-4">"Grâce à Winter Mate, j'ai pu partager ma passion pour le ski et générer des revenus complémentaires avec mes vidéos TikTok."</p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center font-bold text-blue-400 border border-blue-500/30">
                 L
               </div>
               <div>
                 <p className="font-semibold">Lucas D.</p>
-                <p className="text-sm text-zinc-400">Créateur WinterMate</p>
+                <p className="text-sm text-zinc-400">Créateur Winter Mate</p>
               </div>
             </div>
           </div>

@@ -22,12 +22,13 @@ import {
   ProfilePage,
   TiktokCallbackPage,
   TermsOfServicePage,
-  PrivacyPolicyPage,
+  CreatorsLandingPage,
 } from '@/pages';
 
 export enum AppRoutes {
   // Public
   landing = '/',
+  creators = '/creators',
   login = '/login',
   register = '/register',
   forgotPassword = '/forgot-password',
@@ -80,6 +81,7 @@ export const useAppRoutes = () => {
     config: [
       // Public routes
       { path: AppRoutes.landing, element: <LandingPage /> },
+      { path: AppRoutes.creators, element: <CreatorsLandingPage /> },
       { path: AppRoutes.login, element: <LoginPage /> },
       { path: AppRoutes.register, element: <RegisterPage /> },
       { path: AppRoutes.forgotPassword, element: <ForgotPasswordPage /> },
@@ -87,7 +89,7 @@ export const useAppRoutes = () => {
       { path: AppRoutes.campaigns, element: <CampaignsPage /> },
       { path: AppRoutes.campaignDetail, element: <CampaignDetailPage /> },
       { path: AppRoutes.termsOfService, element: <TermsOfServicePage /> },
-      { path: AppRoutes.privacyPolicy, element: <PrivacyPolicyPage /> },
+
 
       // Protected routes
       { path: AppRoutes.dashboard, element: <DashboardPage /> },
