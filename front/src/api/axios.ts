@@ -61,9 +61,6 @@ export const axiosGet = <_, ResponseData>(
   params: unknown,
   timeout = 60000
 ) => {
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'axios.ts:49',message:'axiosGet called',data:{url,baseURL:BASE_URL,fullUrl:`${BASE_URL}${url}`,params},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   return axiosRequest<ResponseData>({ method: "GET", url, params, timeout });
 };
 

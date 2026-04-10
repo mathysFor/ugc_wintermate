@@ -22,6 +22,7 @@ import {
   ProfilePage,
   TiktokCallbackPage,
   TermsOfServicePage,
+  PrivacyPolicyPage,
   CreatorsLandingPage,
 } from '@/pages';
 
@@ -89,7 +90,7 @@ export const useAppRoutes = () => {
       { path: AppRoutes.campaigns, element: <CampaignsPage /> },
       { path: AppRoutes.campaignDetail, element: <CampaignDetailPage /> },
       { path: AppRoutes.termsOfService, element: <TermsOfServicePage /> },
-
+      { path: AppRoutes.privacyPolicy, element: <PrivacyPolicyPage /> },
 
       // Protected routes
       { path: AppRoutes.dashboard, element: <DashboardPage /> },

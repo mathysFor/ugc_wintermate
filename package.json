@@ -1,6 +1,9 @@
 {
     "name": "ai-boosted-project",
     "private": true,
+    "engines": {
+        "node": ">=20.19.0"
+    },
     "workspaces": [
         "back",
         "front"

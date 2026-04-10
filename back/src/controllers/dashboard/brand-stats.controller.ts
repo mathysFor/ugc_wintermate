@@ -124,9 +124,6 @@ const generateDateKeys = (startDate: Date, endDate: Date, granularity: 'day' | '
 export const getBrandDashboardStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as Request & { user?: AuthUser }).user?.id;
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brand-stats.controller.ts:29',message:'getBrandDashboardStats called',data:{userId,userEmail:(req as Request & { user?: AuthUser }).user?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (!userId) {
       res.status(401).json({ error: 'Non authentifié', code: 'UNAUTHORIZED' });
       return;
@@ -149,10 +146,6 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
       .where(eq(brands.userId, userId))
       .limit(1);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brand-stats.controller.ts:40',message:'Brand retrieved',data:{userId,brandId:brand?.id,brandName:brand?.name,brandUserId:brand?.userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-
     if (!brand) {
       res.status(404).json({ error: 'Marque non trouvée', code: 'BRAND_NOT_FOUND' });
       return;
@@ -171,10 +164,6 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
 
     const campaignIds = brandCampaigns.map((c) => c.id);
     const activeCampaigns = brandCampaigns.filter((c) => c.status === 'active').length;
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brand-stats.controller.ts:58',message:'Campaigns retrieved',data:{userId,brandId:brand.id,campaignIds,campaignTitles:brandCampaigns.map(c=>c.title)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
 
     // Compter les créateurs sur la plateforme
     const creatorsCountResult = await db
@@ -614,10 +603,6 @@ export const getBrandDashboardStats = async (req: Request, res: Response): Promi
         trend: winterMateStats.trend,
       },
     };
-
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'brand-stats.controller.ts:378',message:'Stats returned',data:{userId,brandId:brand.id,brandName:brand.name,totalViews,acceptedVideosCount,firstMonthCampaigns:monthlyData[0]?.campaignBreakdown?.map(cb=>cb.campaignTitle)||[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     res.json(stats);
   } catch (error) {

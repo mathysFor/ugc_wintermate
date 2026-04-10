@@ -19,9 +19,6 @@ import type { AuthUser } from '@shared/types/auth';
  * @returns {CreatorsStatsResponse} Statistiques agrégées de tous les créateurs
  */
 export const getCreatorsStats = async (req: Request, res: Response): Promise<void> => {
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/0c586d17-ebe2-41ba-8e31-f4aeee668c22',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'get-creators-stats.controller.ts:26',message:'getCreatorsStats called',data:{method:req.method,path:req.path,url:req.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   try {
     const userId = (req as Request & { user?: AuthUser }).user?.id;
     if (!userId) {

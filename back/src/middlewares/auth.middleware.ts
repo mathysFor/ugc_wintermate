@@ -24,9 +24,6 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
-    // #region agent log
-    fetch('http://127.0.0.1:7247/ingest/33cc8e5c-f359-45c2-9a3c-80250deab640',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'auth.middleware.ts:32',message:'Token decoded',data:{userId:decoded.id,userEmail:decoded.email,isBrand:decoded.isBrand,path:req.path},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     req.user = decoded;
     next();
   } catch (error) {
